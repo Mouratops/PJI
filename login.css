@@ -47,24 +47,49 @@ header {
     font-weight: 400;
 }
 
-.btn button {
-    border: none;
-    border-radius: 10px;
-    color: rgba(0, 0, 0, 0.3);
-    padding: 15px;
+body{
+    width: 100%;
+    height: 100%;
 }
 
-.btn button a {
-    text-decoration: none;
+form{
+    width: 300px;
+    margin: 100px auto;
+    text-align: center;
+    border-radius: 20px;
+    padding: 20px;
+    background-color: antiquewhite;
+    box-shadow: 5px 5px 5px #464646;
+}
+
+input{
+    display: block;
+    margin: 10px auto;
+    width: 300px;
+    height: 50px;
+    border-radius: 20px;
+    box-shadow: 5px 5px 5px #464646;
+}
+
+form button{
+    border: none;
+    border-radius: 20px;
+    color: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    cursor: pointer;
+    width: 200px ;
+    box-shadow: 5px 5px 5px #464646;
+}
+
+form button a{
+     text-decoration: none;
     color: black;
     font-weight: 500;
     font-size: 1.1rem;
 }
-
-ul.jogo{
-    display: flex;
-    padding: 40px;
-    list-style-type: none;
-    align-items: center;
-    justify-content: space-around;
+.registro{
+    text-align: center;
+    box-shadow: 5px 5px 5px #464646;
+    text-decoration: none;
+    color: black;
 }
