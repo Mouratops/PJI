@@ -42,17 +42,25 @@ header {
 
 .link {
     text-decoration: none;
-    color: black;
+    color: rgb(255, 255, 255);
     font-size: 1.15rem;
     font-weight: 400;
+    text-shadow: #464646 3px 2px 2px;
 }
 
-body{
+.link:hover {
+    color: rgb(0, 0, 0);
+    transition: 0.2s;
+    text-shadow: none;
+    transform: scale(1.05);
+}
+
+body {
     width: 100%;
     height: 100%;
 }
 
-form{
+form {
     width: 300px;
     margin: 100px auto;
     text-align: center;
@@ -62,7 +70,7 @@ form{
     box-shadow: 5px 5px 5px #464646;
 }
 
-input{
+input {
     display: block;
     margin: 10px auto;
     width: 300px;
@@ -71,25 +79,34 @@ input{
     box-shadow: 5px 5px 5px #464646;
 }
 
-form button{
+form button {
     border: none;
     border-radius: 20px;
     color: rgba(0, 0, 0, 0.3);
     padding: 15px;
     cursor: pointer;
-    width: 200px ;
+    width: 200px;
     box-shadow: 5px 5px 5px #464646;
 }
 
-form button a{
-     text-decoration: none;
+form button a {
+    text-decoration: none;
     color: black;
     font-weight: 500;
     font-size: 1.1rem;
 }
-.registro{
+
+.registro {
     text-align: center;
     box-shadow: 5px 5px 5px #464646;
     text-decoration: none;
     color: black;
+}
+
+h3 {
+    margin-top: 5px;
+    color: rgb(0, 0, 0);
+    text-shadow: #464646 1px 1px 2px;
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
 }
