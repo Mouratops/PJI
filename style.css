@@ -1,12 +1,16 @@
+@import url('https://fonts.cdnfonts.com/css/minecraft-4');
+                
+
 * {
     padding: 0;
     margin: 0;
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-family: Minecraft, Impact, 'Arial Narrow Bold', sans-serif;
 }
 
 header {
-    background-color: rgb(152, 152, 152);
+    background-color: rgb(3, 30, 71);
     box-shadow: 0px 3px 0px #464646;
+    background-image: url("https://images.stockcake.com/public/5/0/a/50a107ca-5bbf-4e26-a148-77dbed816f7e_large/pixelated-ocean-wave-stockcake.jpg"); 
 }
 
 .topo {
@@ -64,20 +68,23 @@ header {
 }
 
 
-.btn button {
+.btn {
+    display: inline-block;
     border: none;
     border-radius: 15px;
-    color: rgb(0, 0, 0);
+    background-color: rgba(72, 136, 214, 0.67);
     padding: 20px;
     cursor: pointer;
     box-shadow: #464646 5px 3px 10px;
+    color: aliceblue;
+    text-decoration: none;
 }
 
-.btn button a {
-    text-decoration: none;
-    color: black;
-    font-weight: 500;
-    font-size: 1.1rem;
+.btn:hover{
+    background-color: rgba(72, 136, 214, 0.9);
+    transition: 0.2s;
+    transform: scale(1.05); 
+    text-shadow: none;
 }
 
 ul.jogo {
@@ -92,6 +99,11 @@ ul.jogo li {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+body{
+    background: #2A7B9B;
+    background: linear-gradient(359deg, rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 91%, rgba(237, 221, 83, 1) 100%);
 }
 
 .gameimage {
@@ -111,7 +123,7 @@ h3 {
     color: rgb(0, 0, 0);
     text-shadow: #464646 1px 1px 2px;
     text-align: center;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Minecraft, Impact, 'Arial Narrow Bold', sans-serif;
 }
 
 h5 {
@@ -119,7 +131,7 @@ h5 {
     color: rgb(0, 0, 0);
     text-shadow: #464646 1px 1px 2px;
     text-align: center;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Minecraft, Impact, 'Arial Narrow Bold', sans-serif;
 }
 
 h5:hover {
