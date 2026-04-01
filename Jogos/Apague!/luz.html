@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apague!</title>
+  <script src="luzes.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="luzes.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="start" class="screen active">
+
+    <div class="mc-title-block">
+      <div class="mc-eyebrow">🌙 MODO ECONOMIA DE ENERGIA</div>
+
+      <div class="torches-row">
+        <div class="torch-anim">
+          <div class="t-flame"></div>
+          <div class="t-top"></div>
+          <div class="t-body"></div>
+        </div>
+        <div class="torch-anim">
+          <div class="t-flame"></div>
+          <div class="t-top"></div>
+          <div class="t-body"></div>
+        </div>
+        <div class="torch-anim">
+          <div class="t-flame"></div>
+          <div class="t-top"></div>
+          <div class="t-body"></div>
+        </div>
+      </div>
+
+      <div class="mc-title">⚡ APAGUE! ⚡</div>
+      <div class="mc-title-sub">Economizar energia ajuda o mundo!</div>
+    </div>
+
+    <div class="mc-rules">
+      <div class="mc-rules-title">📜 REGRAS DO JOGO</div>
+
+      <div class="rule-row">
+        <div class="rule-icon">⏱️</div>
+        <div class="rule-text">
+          <strong>2 MINUTOS</strong> para apagar o máximo de Luzes Acesas possível.
+          Quanto mais rápido, mais pontos!
+        </div>
+      </div>
+
+      <div class="rule-row">
+        <div class="rule-icon">🔦</div>
+        <div class="rule-text">
+          Luzes acendem aleatoriamente. Clique nelas para
+          <strong>APAGAR</strong> e ganhar pontos.
+        </div>
+      </div>
+
+      <div class="rule-row">
+        <div class="rule-icon">🔥</div>
+        <div class="rule-text">
+          Combine apagadas seguidas para
+          <strong>COMBO x2, x3, x4!</strong> Não erre ou o combo reinicia.
+        </div>
+      </div>
+
+      <div class="rule-row">
+        <div class="rule-icon">❤️</div>
+        <div class="rule-text">
+          Você tem <strong>3 VIDAS.</strong> Clicar em luzes
+          <span class="bad">JÁ APAGADAS</span> custa uma vida. Cuidado!
+        </div>
+      </div>
+
+      <div class="rule-row">
+        <div class="rule-icon">💀</div>
+        <div class="rule-text">
+          Se perder todas as vidas, <span class="bad">GAME OVER</span> imediato.
+          Sobreviva até o fim dos minutos e entre para o Ranking!
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-start" id="btn-start">▶ JOGAR AGORA</button>
+  </div>
+
+  <div id="game" class="screen">
+
+    <div class="hud">
+      <div class="hud-block">
+        <div class="hud-lbl">⏱ Tempo</div>
+        <div class="hud-val" id="hud-time">2:00</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-lbl">⭐ Pontos</div>
+        <div class="hud-val" id="hud-score">0</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-lbl">❤️ Vidas</div>
+        <div class="hud-val">
+          <div class="lives-row" id="lives-row">
+            <div class="life" id="life-0"></div>
+            <div class="life" id="life-1"></div>
+            <div class="life" id="life-2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-lbl">⚡ Combo</div>
+        <div class="hud-val combo-hud" id="hud-combo">x1</div>
+      </div>
+    </div>
+
+    <div class="time-bar-track">
+      <div id="time-bar"></div>
+    </div>
+
+    <div class="game-body">
+
+      <div class="grid-wrap">
+        <div class="grid-label">🏠 Cômodos da casa — apague as tochas!</div>
+        <div id="grid"></div>
+      </div>
+
+      <div class="sidebar">
+
+        <div class="mc-panel">
+          <div class="mc-panel-title">⚡ XP Combo</div>
+          <div class="xp-bar-wrap">
+            <div id="xp-bar"></div>
+          </div>
+          <div class="xp-label" id="xp-label">COMBO 0/10</div>
+        </div>
+
+        <div class="mc-panel">
+          <div class="mc-panel-title">📊 Estatísticas</div>
+          <div class="stat-row">
+            <span class="stat-k">Apagadas</span>
+            <span class="stat-v" id="stat-off">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-k">Erros</span>
+            <span class="stat-v" id="stat-err">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-k">Melhor combo</span>
+            <span class="stat-v" id="stat-best">x1</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-k">Acesas agora</span>
+            <span class="stat-v" id="stat-on">0</span>
+          </div>
+        </div>
+
+        <div class="mc-panel">
+          <div class="mc-panel-title">📋 Log</div>
+          <div id="log"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="over" class="screen">
+    <div class="over-panel">
+      <div class="mob-face" id="over-mob">💀</div>
+      <div class="over-verdict" id="over-verdict">GAME OVER</div>
+      <div class="over-title" id="over-title">Você foi derrotado!</div>
+      <div class="over-score" id="over-score">0</div>
+      <div class="over-score-label">PONTOS TOTAIS</div>
+
+      <div class="over-stats-grid">
+        <div class="over-stat">
+          <div class="os-label">APAGADAS</div>
+          <div class="os-val" id="fin-off">0</div>
+        </div>
+        <div class="over-stat">
+          <div class="os-label">ERROS</div>
+          <div class="os-val" id="fin-err">0</div>
+        </div>
+        <div class="over-stat">
+          <div class="os-label">MELHOR COMBO</div>
+          <div class="os-val" id="fin-combo">x1</div>
+        </div>
+        <div class="over-stat">
+          <div class="os-label">PRECISÃO</div>
+          <div class="os-val" id="fin-acc">0%</div>
+        </div>
+      </div>
+
+      <div class="energy-note" id="energy-note">
+        Cada luz apagada conta. Continue economizando!
+      </div>
+
+      <button class="btn-restart" id="btn-restart">🔄 JOGAR DE NOVO</button>
+      <button class="btn-voltar" id="btn-voltar">⬅️ VOLTAR</button>
+    </div>
+  </div>
+</body>
+</html>

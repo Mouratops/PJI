@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fuga do Lixão</title>
+  <link rel="stylesheet" href="sub.css"/>
+</head>
+<body>
+<div id="app">
+
+  <div id="hud">
+    <div class="hcol">
+      <div class="hcard">
+        <span class="hl">PONTOS</span>
+        <span class="hv" id="h-score">0</span>
+      </div>
+      <div class="hcard">
+        <span class="hl">DIST</span>
+        <span class="hv" id="h-dist">0m</span>
+      </div>
+    </div>
+    <div class="hcol center">
+      <div class="hcard wide">
+        <span class="hl">⏱ TEMPO</span>
+        <span class="hv timer" id="h-timer">0:00</span>
+      </div>
+      <div class="hcard wide">
+        <span class="hl">VIDAS</span>
+        <div class="lrow">
+          <span class="lf" id="lf0">🐾</span>
+          <span class="lf" id="lf1">🐾</span>
+          <span class="lf" id="lf2">🐾</span>
+        </div>
+        <span class="hl" style="margin-top:3px">BATIDAS</span>
+        <div class="prow">
+          <div class="pip" id="p0"></div>
+          <div class="pip" id="p1"></div>
+          <div class="pip" id="p2"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hcol right">
+      <div class="hcard">
+        <span class="hl">NIVEL</span>
+        <span class="hv spd" id="h-spd">1</span>
+      </div>
+      <div class="hcard pwcard" id="power-card" style="display:none">
+        <span class="hl">PODER</span>
+        <span class="hv power" id="h-power">--</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="wrap">
+    <canvas id="c"></canvas>
+    <div id="flash"></div>
+    <div id="toast"></div>
+
+    <div class="ov show" id="ov-start">
+      <div class="obg"></div>
+      <div class="ocard">
+        <div class="ohero">🐻</div>
+        <h1 class="otitle">FUGA DO LIXÃO</h1>
+        <p class="osub">DESVIE DO LIXO!</p>
+        <div class="instrs">
+          <div class="irow"><b>W A S D</b> — Mover o Urso</div>
+          <div class="irow">⚪ Bola Brilhando = Power-up!</div>
+          <div class="irow">⚡ Turbo = Urso mais rápido</div>
+          <div class="irow">3 Batidas = 1 Vida | 3 Vidas</div>
+        </div>
+        <button class="obtn" id="btn-start">▶ CORRER!</button>
+      </div>
+    </div>
+
+    <div class="ov" id="ov-over">
+      <div class="obg"></div>
+      <div class="ocard">
+        <div class="ohero">💀</div>
+        <h1 class="otitle dead">FIM DE JOGO</h1>
+        <div class="rgrid">
+          <span class="rl">DISTÂNCIA</span><span class="rv" id="r-dist">0m</span>
+          <span class="rl">TEMPO</span>    <span class="rv" id="r-time">0:00</span>
+          <span class="rl">PONTUAÇÃO</span><span class="rv" id="r-score">0</span>
+          <span class="rl">NÍVEL MAX</span><span class="rv" id="r-spd">1</span>
+        </div>
+        <button class="obtn" id="btn-restart">🔄 DE NOVO!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="legend">
+    <span class="li">🗑️ Lixo</span>
+    <span class="li">🚗 Carro</span>
+    <span class="li">🔥 Fogo</span>
+    <span class="li">☣️ Tóxico</span>
+    <span class="li">⚡ Turbo</span>
+    <span class="li">✨ Limpo</span>
+    <span class="li">🐌 Lento</span>
+  </div>
+
+</div>
+<script src="sub.js"></script>
+</body>
+</html>

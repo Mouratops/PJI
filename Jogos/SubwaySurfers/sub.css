@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;900&display=swap');
+
+:root {
+  --bg:      #060e1c;
+  --panel:   rgba(4,10,24,0.96);
+  --border:  #1a5aaa;
+  --blue:    #44aaff;
+  --gold:    #ffdd44;
+  --cream:   #eef4ff;
+  --red:     #ff2200;
+  --green:   #22aa44;
+  --px: 'Press Start 2P', monospace;
+  --nu: 'Nunito', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(20,60,140,.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(10,40,100,.15) 0%, transparent 60%);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  font-family: var(--nu);
+  overflow: hidden;
+}
+
+#app {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0;
+  user-select: none;
+}
+
+#hud {
+  width: 400px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  padding: 8px 12px 6px;
+  gap: 4px;
+}
+.hcol { display: flex; flex-direction: column; gap: 5px; }
+.hcol.center { align-items: center; }
+.hcol.right  { align-items: flex-end; }
+
+.hcard {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(68,170,255,.22);
+  border-radius: 7px; padding: 4px 10px;
+  text-align: center; min-width: 82px;
+}
+.hcard.wide { min-width: 112px; }
+.hcard.pwcard { min-width: 82px; border-color: rgba(200,80,255,.4); background: rgba(160,0,220,.12); }
+
+.hl {
+  display: block; font-family: var(--px);
+  font-size: 5px; letter-spacing: 1px; color: var(--blue);
+}
+.hv {
+  display: block; font-family: var(--px);
+  font-size: 13px; color: var(--cream); line-height: 1.3;
+}
+.timer { color: var(--gold); font-size: 14px; }
+.spd   { color: #44ddff; font-size: 18px; }
+.power { color: #ff88ff; font-size: 8px; animation: ppulse .7s ease-in-out infinite; }
+@keyframes ppulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.lrow, .prow { display: flex; gap: 5px; justify-content: center; padding: 2px 0; }
+.lf { font-size: 16px; transition: all .2s; }
+.lf.lost { opacity: .14; transform: scale(.6); }
+
+.pip {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(255,255,255,.18);
+  transition: all .18s;
+}
+.pip.on { background: var(--red); border-color: #ff7755; box-shadow: 0 0 8px var(--red); }
+
+#wrap {
+  position: relative; width: 400px; height: 580px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  box-shadow:
+    0 0 40px rgba(30,100,220,.25),
+    0 0 80px rgba(10,40,120,.15),
+    inset 0 0 30px rgba(0,0,0,.5);
+}
+#c { display: block; width: 400px; height: 580px; background: #060e1c; }
+
+#flash {
+  position: absolute; inset: 0;
+  background: rgba(255,0,0,.44);
+  pointer-events: none; opacity: 0;
+  transition: opacity .08s; z-index: 15;
+}
+
+#toast {
+  position: absolute; top: 10px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--px); font-size: 7px; letter-spacing: 1px;
+  padding: 6px 16px; border-radius: 20px;
+  color: #fff; white-space: nowrap;
+  pointer-events: none; z-index: 20;
+  opacity: 0; transition: opacity .15s;
+}
+#toast.show  { opacity: 1; }
+#toast.bad   { background: rgba(200,30,30,.92);  border: 1px solid #ff8866; }
+#toast.info  { background: rgba(20,80,180,.92);  border: 1px solid #66aaff; }
+#toast.power { background: rgba(150,10,200,.92); border: 1px solid #ff88ff; box-shadow: 0 0 18px rgba(200,80,255,.6); }
+#toast.good  { background: rgba(20,150,50,.92);  border: 1px solid #66ff88; }
+
+.ov {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.ov.show { opacity: 1; pointer-events: all; }
+
+.obg {
+  position: absolute; inset: 0;
+  background: rgba(2,6,18,.9);
+}
+
+.ocard {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 13px;
+  padding: 28px 24px;
+  background: rgba(4,10,26,.98);
+  border: 2px solid rgba(68,170,255,.45);
+  border-radius: 14px; max-width: 320px; width: 90%;
+  box-shadow: 0 0 50px rgba(30,100,255,.2);
+}
+
+.ohero { font-size: 56px; animation: flt 2.4s ease-in-out infinite; }
+@keyframes flt { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+
+.otitle {
+  font-family: var(--px); font-size: 16px;
+  color: var(--blue); text-shadow: 3px 3px 0 #001030;
+  letter-spacing: 2px; text-align: center; line-height: 1.5;
+}
+.otitle.dead { color: var(--red); text-shadow: 3px 3px 0 #1a0000; }
+.osub { font-family: var(--px); font-size: 7px; color: #80c8ff; letter-spacing: 1px; text-align: center; }
+
+.instrs { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+.irow {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 6px;
+  background: rgba(255,255,255,.04); border-radius: 6px;
+  padding: 7px 10px; font-size: 11px; font-weight: 700; color: #cce;
+}
+
+.rgrid { display: grid; grid-template-columns: auto 1fr; gap: 5px 16px; width: 100%; }
+.rl { font-family: var(--px); font-size: 6px; color: var(--blue); display: flex; align-items: center; }
+.rv { font-family: var(--px); font-size: 14px; color: var(--cream); }
+
+.obtn {
+  font-family: var(--px); font-size: 10px; letter-spacing: 2px;
+  background: linear-gradient(180deg,#1a6acc,#0a3a88);
+  color: #fff; border: 2px solid var(--blue);
+  border-radius: 7px; padding: 11px 28px; cursor: pointer;
+  box-shadow: 0 4px 0 #041840, 0 0 20px rgba(40,120,255,.3);
+  transition: transform .1s, box-shadow .1s;
+}
+.obtn:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 #041840, 0 0 30px rgba(40,120,255,.5); }
+.obtn:active { transform: translateY(2px);  box-shadow: 0 2px 0 #041840; }
+
+#legend {
+  width: 400px;
+  background: var(--panel);
+  border: 2px solid var(--border); border-top: none;
+  border-radius: 0 0 10px 10px;
+  display: flex; justify-content: space-around; flex-wrap: wrap;
+  padding: 5px 8px; gap: 2px;
+}
+.li { font-family: var(--px); font-size: 6px; color: #5090cc; letter-spacing: .3px; }

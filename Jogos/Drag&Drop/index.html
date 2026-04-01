@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drag and Drop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="jogo.css">
+</head>
+<body>
+  <div id="startScreen" class="screen">
+    <div style="font-size:4rem; margin-bottom:0.5rem;">♻️</div>
+    <div class="logo">Vida<br>Sustentável</div>
+    <div class="tagline">Separe o lixo. Salve o planeta. 🌱</div>
+    <button class="btn-start" onclick="startGame()">▶ Jogar</button>
+    <div class="rules-box">
+      ❤️ 3 vidas &nbsp;|&nbsp; ⏱️ 2 minutos<br>
+      Arraste cada item para a lixeira correta.<br>
+      Erro = perde 1 vida. Boa sorte!
+    </div>
+  </div>
+<!--tela-->
+  <div id="gameScreen" class="screen hidden">
+
+<!--cenario-->
+    <div id="scene">
+      <div class="sky"></div>
+      <div class="sun"></div>
+<!--nuvens-->
+      <div class="cloud" style="width:100px;height:28px;top:8%;left:-120px;animation-duration:18s;animation-delay:0s;">
+        <div style="position:absolute;width:55px;height:42px;background:rgba(255,255,255,0.9);border-radius:50%;top:-20px;left:15px;"></div>
+        <div style="position:absolute;width:38px;height:32px;background:rgba(255,255,255,0.9);border-radius:50%;top:-14px;left:45px;"></div>
+      </div>
+      <div class="cloud" style="width:80px;height:22px;top:16%;left:-100px;animation-duration:24s;animation-delay:6s;">
+        <div style="position:absolute;width:44px;height:34px;background:rgba(255,255,255,0.9);border-radius:50%;top:-16px;left:10px;"></div>
+        <div style="position:absolute;width:30px;height:26px;background:rgba(255,255,255,0.9);border-radius:50%;top:-12px;left:38px;"></div>
+      </div>
+      <div class="cloud" style="width:120px;height:32px;top:5%;left:-140px;animation-duration:30s;animation-delay:12s;">
+        <div style="position:absolute;width:65px;height:50px;background:rgba(255,255,255,0.9);border-radius:50%;top:-25px;left:20px;"></div>
+        <div style="position:absolute;width:48px;height:38px;background:rgba(255,255,255,0.9);border-radius:50%;top:-18px;left:58px;"></div>
+      </div>
+<!--predios-->
+      <div class="buildings" id="buildings"></div>
+<!--chao -->
+      <div class="ground-strip"></div>
+      <div class="ground-tiles"></div>
+      <div class="ground-glow"></div>
+      <div class="sidewalk"></div>
+      <div class="road">
+        <div class="road-lines-container" id="roadLines"></div>
+      </div>
+      <div class="sidewalk2"></div>
+<!--arvores e lanternas-->
+    </div>
+<!--base do jogo mostrar placar/oq tem q ser feito-->
+    <div id="ui">
+      <div class="ui-block" id="livesDisplay">❤️❤️❤️</div>
+      <div class="ui-block" id="timerDisplay">⏱️ 2:00</div>
+      <div class="ui-block" id="scoreDisplay">✅ 0</div>
+    </div>
+<!--spawn item-->
+    <div id="spawnZone"></div>
+<!--caçamba/lixei-->
+    <div id="binsZone">
+      <div class="bin-wrapper">
+        <div class="bin bin-plastic" data-type="plastic" id="bin-plastic">
+          <div class="bin-shine"></div>
+          <div class="bin-inner">
+            <span class="bin-name">PLÁSTICO</span>
+          </div>
+        </div>
+      </div>
+      <div class="bin-wrapper">
+        <div class="bin bin-glass" data-type="glass" id="bin-glass">
+          <div class="bin-shine"></div>
+          <div class="bin-inner">
+            <span class="bin-name">VIDRO</span>
+          </div>
+        </div>
+      </div>
+      <div class="bin-wrapper">
+        <div class="bin bin-paper" data-type="paper" id="bin-paper">
+          <div class="bin-shine"></div>
+          <div class="bin-inner">
+            <span class="bin-name">PAPEL</span>
+          </div>
+        </div>
+      </div>
+      <div class="bin-wrapper">
+        <div class="bin bin-organic" data-type="organic" id="bin-organic">
+          <div class="bin-shine"></div>
+          <div class="bin-inner">
+            <span class="bin-name">ORGÂNICO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<!--tela d perdeu kkkk, precisamos arrumar as mensagens geradas pelo chat ou deixar tbm, n terá tanta diferença-->
+  <div id="gameOverScreen" class="screen hidden">
+    <div class="go-icon" id="goIcon">🌍</div>
+    <h1 id="goTitle">Fim de Jogo!</h1>
+    <div class="score-final" id="goScore">Você separou 0 itens corretamente!</div>
+    <div class="reflection" id="goReflection">
+      Cada item descartado corretamente faz diferença.<br>
+      O planeta agradece cada pequeno gesto seu! 🌱
+    </div>
+    <button class="btn-restart" onclick="startGame()">🔄 Jogar Novamente</button>
+  </div>
+  <script src="jogo.js"></script>
+</body>
+</html>
