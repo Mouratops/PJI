@@ -59,6 +59,7 @@ var toastEl = document.getElementById('toast');
 
 document.getElementById('btn-start').addEventListener('click', startGame);
 document.getElementById('btn-restart').addEventListener('click', startGame);
+document.getElementById('btn-voltar').addEventListener('click', comeback);
 
 //estado
 var G = {}, keys = {}, animId = null, lastTS = 0, toastTID = null;
@@ -119,6 +120,11 @@ function startGame() {
   if (animId) cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
+
+function comeback() {
+  window.history.back();
+}
+
 function endGame() {
   G.running = false;
   if (animId) { cancelAnimationFrame(animId); animId = null; }

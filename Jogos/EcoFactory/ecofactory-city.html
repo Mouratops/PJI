@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 EcoFactory City</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --eco: #4ade80;
+    --eco-dark: #16a34a;
+    --eco-light: #bbf7d0;
+    --money: #fbbf24;
+    --money-dark: #d97706;
+    --dirty: #9ca3af;
+    --dirty-dark: #4b5563;
+    --sky-good: #bae6fd;
+    --sky-bad: #d1d5db;
+    --belt: #92400e;
+    --belt-light: #b45309;
+    --panel: rgba(255,255,255,0.92);
+    --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    --radius: 18px;
+    --font-head: 'Fredoka One', cursive;
+    --font-body: 'Nunito', sans-serif;
+    --city-bg: #bae6fd;
+    --ground: #86efac;
+    --smoke: 0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--city-bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 1.5s ease;
+    user-select: none;
+  }
+
+  /* ===== SKY / CITY BG ===== */
+  #city-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    transition: background 2s;
+    overflow: hidden;
+  }
+
+  .cloud {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    opacity: 0.7;
+    animation: drift linear infinite;
+    transition: background 2s, opacity 2s;
+  }
+  @keyframes drift { from{transform:translateX(-200px)} to{transform:translateX(110vw)} }
+
+  .smoke-particle {
+    position: absolute;
+    bottom: 0;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #6b7280;
+    opacity: 0.5;
+    animation: smokeUp 3s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes smokeUp {
+    0%{transform:translateY(0) scale(0.5);opacity:0.5}
+    100%{transform:translateY(-180px) scale(2.5);opacity:0}
+  }
+
+  .city-building {
+    position: absolute;
+    bottom: 0;
+    border-radius: 4px 4px 0 0;
+    transition: background 2s, box-shadow 2s;
+  }
+
+  .tree-city {
+    position: absolute;
+    bottom: 0;
+    font-size: 2.2em;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    transition: opacity 1s, transform 0.5s;
+  }
+
+  /* ===== LAYOUT ===== */
+  #wrapper {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ===== HEADER ===== */
+  #header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #header h1 {
+    font-family: var(--font-head);
+    font-size: 1.5em;
+    color: var(--eco-dark);
+    letter-spacing: 1px;
+  }
+
+  .stat-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: #f0fdf4;
+    border-radius: 30px;
+    padding: 6px 14px;
+    font-weight: 800;
+    font-size: 1em;
+    border: 2px solid var(--eco-light);
+    transition: background 0.3s;
+  }
+  .stat-pill.money { background: #fffbeb; border-color: #fde68a; color: var(--money-dark); }
+  .stat-pill.eco { color: var(--eco-dark); }
+  .stat-pill.happy { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
+
+  /* ===== BARS ===== */
+  #bars-panel {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    box-shadow: var(--shadow);
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+
+  .bar-item {
+    flex: 1; min-width: 140px;
+  }
+
+  .bar-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 700; font-size: 0.85em; margin-bottom: 5px;
+  }
+
+  .bar-track {
+    height: 14px;
+    background: #e5e7eb;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.6s ease, background 0.6s;
+  }
+
+  .bar-fill.eco-fill { background: linear-gradient(90deg, #4ade80, #22c55e); }
+  .bar-fill.happy-fill { background: linear-gradient(90deg, #fb923c, #f97316); }
+  .bar-fill.prod-fill { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
+
+  /* ===== BELT SECTION ===== */
+  #belt-section {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+  }
+
+  #belt-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  #belt-header h2 { font-family: var(--font-head); color: #78350f; font-size: 1.1em; }
+
+  .belt-type-tabs {
+    display: flex; gap: 6px;
+  }
+  .belt-tab {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 2px solid #d1d5db;
+    background: white;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.8em;
+    transition: all 0.2s;
+  }
+  .belt-tab.active { background: var(--belt); color: white; border-color: var(--belt); }
+  .belt-tab:not(.active):hover { border-color: var(--belt); color: var(--belt); }
+
+  #belt-container {
+    position: relative;
+    background: #92400e;
+    border-radius: 12px;
+    height: 80px;
+    overflow: hidden;
+    border: 3px solid #78350f;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.25), 0 3px 8px rgba(0,0,0,0.18);
+  }
+
+  /* belt stripes */
+  #belt-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0px, transparent 44px, rgba(120,53,15,0.4) 44px, rgba(120,53,15,0.4) 48px);
+    animation: beltMove linear infinite;
+    border-radius: 9px;
+  }
+  @keyframes beltMove { from{background-position:0 0} to{background-position:-48px 0} }
+
+  /* adjust animation speed via JS */
+
+  .belt-item {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2em;
+    animation: beltTravel linear forwards;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    z-index: 2;
+    pointer-events: none;
+  }
+  @keyframes beltTravel {
+    from { left: 0; }
+    to { left: calc(100% + 40px); }
+  }
+
+  /* collector at end */
+  #collector {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 64px;
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px;
+    z-index: 3;
+    border-radius: 0 9px 9px 0;
+    border-left: 3px solid #1e40af;
+  }
+  #collector span { font-size: 1.6em; }
+  #collector small { color: white; font-size: 0.65em; font-weight: 800; letter-spacing: 0.5px; }
+
+  .coin-pop {
+    position: absolute;
+    right: 32px;
+    top: 8px;
+    font-size: 1.2em;
+    font-weight: 800;
+    color: var(--money);
+    animation: coinPop 1s ease-out forwards;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  @keyframes coinPop {
+    0% { transform: translateY(0) scale(0.5); opacity: 1; }
+    100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+  }
+
+  /* ===== CLICK BUTTON ===== */
+  #action-row {
+    display: flex; gap: 10px; align-items: stretch;
+  }
+
+  #click-btn {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-head);
+    font-size: 1.25em;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: white;
+    box-shadow: 0 6px 0 #15803d, var(--shadow);
+    transition: transform 0.08s, box-shadow 0.08s;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+  #click-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #15803d, var(--shadow);
+  }
+  #click-btn.polluting {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    box-shadow: 0 6px 0 #b91c1c, var(--shadow);
+  }
+  #click-btn.polluting:active { box-shadow: 0 2px 0 #b91c1c; }
+
+  #click-btn .btn-icon { font-size: 1.4em; }
+
+  #mode-toggle {
+    padding: 14px 18px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--panel);
+    font-family: var(--font-head);
+    font-size: 0.9em;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    border: 2px solid #e5e7eb;
+    color: #374151;
+    transition: all 0.2s;
+  }
+  #mode-toggle:hover { border-color: var(--eco); color: var(--eco-dark); }
+
+  /* ===== SHOP + UPGRADES ===== */
+  #bottom-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+
+  #shop-panel, #upgrades-panel {
+    flex: 1; min-width: 240px;
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .panel-title {
+    font-family: var(--font-head);
+    font-size: 1.05em;
+    color: #374151;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .shop-btn {
+    padding: 10px 8px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.8em;
+    text-align: center;
+    transition: all 0.18s;
+    line-height: 1.3;
+    color: #374151;
+  }
+  .shop-btn:hover:not(:disabled) {
+    border-color: var(--eco);
+    background: #f0fdf4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74,222,128,0.2);
+  }
+  .shop-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .shop-btn .item-cost { color: var(--money-dark); font-size: 0.9em; }
+  .shop-btn .item-icon { font-size: 1.6em; display: block; margin-bottom: 2px; }
+  .shop-btn.bought { background: #f0fdf4; border-color: var(--eco); color: var(--eco-dark); }
+
+  .upgrade-list { display: flex; flex-direction: column; gap: 7px; }
+
+  .upgrade-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.82em;
+    transition: all 0.18s;
+    text-align: left;
+  }
+  .upgrade-btn:hover:not(:disabled) {
+    border-color: #60a5fa;
+    background: #eff6ff;
+    transform: translateX(3px);
+  }
+  .upgrade-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .upgrade-icon { font-size: 1.5em; }
+  .upgrade-info { flex: 1; }
+  .upgrade-name { color: #1e40af; }
+  .upgrade-cost { color: var(--money-dark); font-size: 0.85em; }
+  .upgrade-level { background: #dbeafe; color: #1d4ed8; border-radius: 8px; padding: 1px 8px; font-size: 0.78em; }
+
+  /* ===== EVENT POPUP ===== */
+  #event-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  #event-overlay.show { display: flex; }
+
+  #event-card {
+    background: white;
+    border-radius: 24px;
+    padding: 28px 32px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    text-align: center;
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  #event-card .event-icon { font-size: 3em; margin-bottom: 10px; }
+  #event-card h3 { font-family: var(--font-head); font-size: 1.4em; color: #1f2937; margin-bottom: 8px; }
+  #event-card p { color: #6b7280; font-size: 0.9em; margin-bottom: 20px; line-height: 1.5; }
+
+  .event-btns { display: flex; gap: 10px; }
+  .event-accept, .event-refuse {
+    flex: 1; padding: 12px; border: none; border-radius: 14px;
+    font-family: var(--font-head); font-size: 1em; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .event-accept { background: linear-gradient(135deg, #f87171, #ef4444); color: white; box-shadow: 0 4px 0 #b91c1c; }
+  .event-refuse { background: linear-gradient(135deg, #4ade80, #22c55e); color: white; box-shadow: 0 4px 0 #15803d; }
+  .event-accept:active, .event-refuse:active { transform: translateY(3px); box-shadow: 0 1px 0; }
+
+  .event-effect { font-size: 0.78em; margin-top: 3px; opacity: 0.8; }
+
+  /* ===== MINIGAME ===== */
+  #minigame-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  #minigame-overlay.show { display: flex; }
+
+  #minigame-card {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    text-align: center;
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #minigame-card h3 { font-family: var(--font-head); font-size: 1.3em; margin-bottom: 8px; color: #1f2937; }
+  #minigame-card p { color: #6b7280; font-size: 0.88em; margin-bottom: 14px; }
+  #minigame-area {
+    min-height: 120px;
+    border: 2px dashed #d1d5db;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .trash-item {
+    font-size: 2.4em;
+    cursor: pointer;
+    transition: transform 0.15s;
+    line-height: 1;
+  }
+  .trash-item:hover { transform: scale(1.25) rotate(-10deg); }
+  #mg-timer { font-size: 2em; font-family: var(--font-head); color: #ef4444; }
+  #mg-score { font-weight: 800; color: var(--eco-dark); }
+
+  /* ===== TOAST ===== */
+  #toast-container {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    z-index: 200;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .toast {
+    background: white;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 0.9em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    animation: toastIn 0.3s ease, toastOut 0.4s 2.3s forwards;
+    display: flex; align-items: center; gap: 8px;
+    border-left: 4px solid var(--eco);
+  }
+  .toast.money-toast { border-color: var(--money); }
+  .toast.warn-toast { border-color: #ef4444; }
+  @keyframes toastIn { from{transform:translateX(120px);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes toastOut { to{transform:translateX(120px);opacity:0} }
+
+  /* ===== LEVEL BADGE ===== */
+  #level-badge {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    font-family: var(--font-head);
+    color: var(--eco-dark);
+    font-size: 0.9em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+
+  #progress-bar-track {
+    flex: 1;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  #progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--eco), #86efac);
+    border-radius: 20px;
+    transition: width 0.5s ease;
+  }
+
+  /* Responsive */
+  @media(max-width: 540px) {
+    #header h1 { font-size: 1.2em; }
+    .stat-pill { font-size: 0.85em; padding: 5px 10px; }
+    #click-btn { font-size: 1em; }
+    .shop-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .auto-badge {
+    position: absolute;
+    top: -8px; right: -8px;
+    background: #7c3aed;
+    color: white;
+    font-size: 0.55em;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  #fps-counter {
+    position: fixed; bottom: 8px; left: 12px;
+    font-size: 0.7em; color: rgba(0,0,0,0.25);
+    z-index: 300;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<div id="city-scene"></div>
+
+<div id="wrapper">
+  <!-- HEADER -->
+  <div id="header">
+    <h1>🌱 EcoFactory City</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div class="stat-pill money">💰 <span id="money-display">0</span></div>
+      <div class="stat-pill eco">🌿 <span id="eco-display">50</span>%</div>
+      <div class="stat-pill happy">😊 <span id="happy-display">70</span>%</div>
+    </div>
+  </div>
+
+  <!-- LEVEL -->
+  <div id="level-badge">
+    <span id="level-icon">🌱</span>
+    <span id="level-name">Cidade Nascente</span>
+    <div id="progress-bar-track">
+      <div id="progress-bar-fill" style="width:5%"></div>
+    </div>
+    <span id="level-xp">0 XP</span>
+  </div>
+
+  <!-- BARS -->
+  <div id="bars-panel">
+    <div class="bar-item">
+      <div class="bar-label">
+        <span>🌿 Sustentabilidade</span><span id="eco-pct">50%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill eco-fill" id="eco-bar" style="width:50%"></div></div>
+    </div>
+    <div class="bar-item">
+      <div class="bar-label">
+        <span>😊 Felicidade</span><span id="happy-pct">70%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill happy-fill" id="happy-bar" style="width:70%"></div></div>
+    </div>
+    <div class="bar-item">
+      <div class="bar-label">
+        <span>⚡ Produção/s</span><span id="prod-display">0</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill prod-fill" id="prod-bar" style="width:5%"></div></div>
+    </div>
+  </div>
+
+  <!-- BELT -->
+  <div id="belt-section">
+    <div id="belt-header">
+      <h2>🏭 Esteira de Produção</h2>
+      <div class="belt-type-tabs">
+        <button class="belt-tab active" data-type="green" onclick="setBeltType('green')">🌿 Verde</button>
+        <button class="belt-tab" data-type="recycle" onclick="setBeltType('recycle')" id="tab-recycle" style="display:none">♻️ Recicla</button>
+        <button class="belt-tab" data-type="energy" onclick="setBeltType('energy')" id="tab-energy" style="display:none">⚡ Energia</button>
+      </div>
+    </div>
+    <div id="belt-container">
+      <div id="collector">
+        <span>💵</span>
+        <small>COLETOR</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION ROW -->
+  <div id="action-row">
+    <button id="click-btn" onclick="clickProduce()">
+      <span class="btn-icon">🌱</span> Produzir!
+    </button>
+    <button id="mode-toggle" onclick="toggleMode()">🔄 Modo</button>
+    <button id="minigame-btn" onclick="openMinigame()" style="padding:14px 18px;border:none;border-radius:18px;background:var(--panel);font-family:var(--font-head);font-size:0.9em;cursor:pointer;box-shadow:var(--shadow);border:2px solid #e5e7eb;color:#7c3aed;">🎲 Mini</button>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div id="bottom-row">
+    <!-- SHOP -->
+    <div id="shop-panel">
+      <div class="panel-title">🛒 Loja da Cidade</div>
+      <div class="shop-grid" id="shop-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- UPGRADES -->
+    <div id="upgrades-panel">
+      <div class="panel-title">⚙️ Melhorias da Esteira</div>
+      <div class="upgrade-list" id="upgrade-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT POPUP -->
+<div id="event-overlay">
+  <div id="event-card">
+    <div class="event-icon" id="ev-icon">📢</div>
+    <h3 id="ev-title">Evento!</h3>
+    <p id="ev-desc">Descrição do evento.</p>
+    <div class="event-btns">
+      <button class="event-accept" onclick="resolveEvent(true)">
+        💰 Aceitar<br><span class="event-effect" id="ev-accept-effect"></span>
+      </button>
+      <button class="event-refuse" onclick="resolveEvent(false)">
+        🌱 Recusar<br><span class="event-effect" id="ev-refuse-effect"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MINIGAME OVERLAY -->
+<div id="minigame-overlay">
+  <div id="minigame-card">
+    <h3>♻️ Separar o Lixo!</h3>
+    <p>Clique <strong>apenas nos recicláveis</strong> ♻️ antes do tempo acabar! Cada erro tira R$25 do prêmio.</p>
+    <div id="minigame-area"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>⏱️ <span id="mg-timer">10</span>s</div>
+      <div>❌ <span id="mg-score">0 erros</span></div>
+    </div>
+    <button onclick="closeMinigame()" style="margin-top:12px;padding:8px 22px;border:none;border-radius:12px;background:#e5e7eb;cursor:pointer;font-family:var(--font-head)">Fechar</button>
+  </div>
+</div>
+
+<!-- LEVEL UP MODAL -->
+<div id="levelup-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:110;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div id="levelup-card" style="background:white;border-radius:28px;padding:36px 32px;max-width:360px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.25);text-align:center;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:3.5em;margin-bottom:8px" id="lu-icon">🌿</div>
+    <div style="font-family:var(--font-head);font-size:1.1em;color:#6b7280;margin-bottom:4px">CIDADE EVOLUIU!</div>
+    <div style="font-family:var(--font-head);font-size:1.8em;color:var(--eco-dark);margin-bottom:8px" id="lu-name">Vilarejo Verde</div>
+    <div style="color:#6b7280;font-size:0.9em;margin-bottom:24px" id="lu-desc">Continue produzindo e comprando melhorias!</div>
+    <button onclick="closeLevelUp()" style="padding:14px 40px;border:none;border-radius:16px;background:linear-gradient(135deg,#4ade80,#22c55e);color:white;font-family:var(--font-head);font-size:1.1em;cursor:pointer;box-shadow:0 4px 0 #15803d;">🎉 Continuar!</button>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameover-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:120;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:white;border-radius:28px;padding:36px 32px;max-width:380px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.35);text-align:center;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:4em;margin-bottom:8px">💀</div>
+    <div style="font-family:var(--font-head);font-size:2em;color:#ef4444;margin-bottom:8px">GAME OVER</div>
+    <div style="color:#6b7280;font-size:0.95em;margin-bottom:8px">A sustentabilidade chegou a <strong>0%</strong>.<br>Sua cidade foi destruída pela poluição!</div>
+    <div style="background:#fef2f2;border-radius:14px;padding:12px;margin-bottom:20px;font-size:0.9em;color:#991b1b">
+      💰 Total ganho: <strong id="go-money">0</strong><br>
+      🏆 XP acumulado: <strong id="go-xp">0</strong>
+    </div>
+    <button onclick="restartGame()" style="padding:14px 40px;border:none;border-radius:16px;background:linear-gradient(135deg,#4ade80,#22c55e);color:white;font-family:var(--font-head);font-size:1.1em;cursor:pointer;box-shadow:0 4px 0 #15803d;">🔄 Tentar de Novo</button>
+  </div>
+</div>
+
+<!-- WIN SCREEN -->
+<div id="win-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:28px;padding:36px 32px;max-width:400px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.3);text-align:center;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);border:3px solid #4ade80;">
+    <div style="font-size:4em;margin-bottom:8px">🏆</div>
+    <div style="font-family:var(--font-head);font-size:2em;color:var(--eco-dark);margin-bottom:6px">PARABÉNS!</div>
+    <div style="font-family:var(--font-head);font-size:1.2em;color:#16a34a;margin-bottom:10px">✨ EcoParaíso Alcançado! ✨</div>
+    <div style="color:#374151;font-size:0.92em;margin-bottom:12px">Você transformou sua cidade numa capital sustentável! O planeta agradece! 🌍</div>
+    <div style="background:white;border-radius:14px;padding:14px;margin-bottom:20px;font-size:0.9em;color:#374151">
+      💰 Total ganho: <strong id="win-money">0</strong><br>
+      🌿 Sustentabilidade: <strong id="win-eco">0</strong>%<br>
+      🏆 XP acumulado: <strong id="win-xp">0</strong>
+    </div>
+    <button onclick="restartGame()" style="padding:14px 40px;border:none;border-radius:16px;background:linear-gradient(135deg,#4ade80,#22c55e);color:white;font-family:var(--font-head);font-size:1.1em;cursor:pointer;box-shadow:0 4px 0 #15803d;margin-right:8px;">🔄 Jogar Novamente</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+<div id="fps-counter"></div>
+
+<script>
+// ============================================================
+//  GAME STATE
+// ============================================================
+const G = {
+  money: 0,
+  eco: 50,
+  happy: 70,
+  xp: 0,
+  level: 0,
+  beltType: 'green',
+  beltCapacity: 3,
+  beltItemValue: 1,
+  beltValueMult: 1,
+  autoProduceRate: 0,
+  itemsOnBelt: 0,
+  totalItems: 0,
+  totalEarned: 0,
+  lastTick: Date.now(),
+  tickDelta: 0,
+  // eco decay / gain
+  ecoDecayRate: 0.4,
+  ecoGainRate: 0.2,
+  happyDecayRate: 0.1,
+  // city items bought
+  trees: 0,
+  solar: 0,
+  windmills: 0,
+  waterFilter: 0,
+  // upgrades
+  upgSpeed: 0,
+  upgCapacity: 0,
+  upgValue: 0,
+  upgAuto: 0,
+  upgMult: 0,
+  // mode
+  polluting: false,
+  gameOver: false,
+  gameWon: false,
+  // unlocks
+  unlockedRecycle: false,
+  unlockedEnergy: false,
+  // event cooldown
+  nextEvent: 30,
+  eventElapsed: 0,
+  eventActive: false,
+  // smoke particles timer
+  smokeTimer: 0,
+};
+
+const LEVELS = [
+  { xp: 0,    name: 'Cidade Nascente',       icon: '🌱' },
+  { xp: 120,  name: 'Vilarejo Verde',         icon: '🌿' },
+  { xp: 350,  name: 'Cidade Limpa',           icon: '🏡' },
+  { xp: 800,  name: 'Metrópole Sustentável',  icon: '🌳' },
+  { xp: 1800, name: 'Capital Ecológica',      icon: '🌍' },
+  { xp: 3500, name: 'EcoParaíso',             icon: '✨' },
+];
+
+const BELT_ITEMS = {
+  green:      { eco: true,  icons: ['🌱','🌿','🍃','🌾'], label: 'Produzir Planta', color: '#22c55e' },
+  recycle:    { eco: true,  icons: ['♻️','📦','🗃️','🥤'], label: 'Reciclar',        color: '#0ea5e9' },
+  energy:     { eco: true,  icons: ['⚡','☀️','💧','🔋'], label: 'Gerar Energia',   color: '#8b5cf6' },
+  industrial: { eco: false, icons: ['⚙️','🔩','🔧','💊'], label: 'Produzir Peça',   color: '#ef4444' },
+};
+
+// ecoBtn=true means "Recusar" is the green eco choice; moneyBtn=true means "Aceitar" is the red money choice
+const EVENTS = [
+  { icon:'🏭', title:'Nova Fábrica!',         desc:'Uma empresa quer abrir uma fábrica em sua cidade. Muito lucro, muita poluição.', acceptMoney:200, acceptEco:-20, refuseEco:12, refuseMoney:0 },
+  { icon:'🌳', title:'Plantação Comunitária', desc:'Moradores querem plantar árvores no centro. Custa dinheiro mas melhora a cidade.', acceptMoney:0,   acceptEco:20,  refuseEco:0,   refuseMoney:0, acceptIsEco:true },
+  { icon:'⛽', title:'Oferta de Petróleo',    desc:'Uma empresa quer explorar petróleo. $$ rápido mas desastre ambiental.', acceptMoney:350, acceptEco:-35, refuseEco:15, refuseMoney:0 },
+  { icon:'☀️', title:'Subsídio Solar',        desc:'O governo oferece subsídio para energia solar. Ótimo para o meio ambiente!', acceptMoney:0,   acceptEco:25,  refuseEco:0,   refuseMoney:0, acceptIsEco:true },
+  { icon:'🐟', title:'Pesca Industrial',      desc:'Empresas de pesca querem usar o lago. Bom dinheiro mas afeta os peixes.', acceptMoney:180, acceptEco:-15, refuseEco:10, refuseMoney:0 },
+  { icon:'🚌', title:'Transporte Verde',      desc:'Implementar ônibus elétricos. Aumenta a felicidade e a sustentabilidade!', acceptMoney:0,   acceptEco:18,  refuseEco:0,   refuseMoney:0, acceptIsEco:true },
+  { icon:'🏗️', title:'Loteamento Urbano',     desc:'Construtora quer derrubar área verde para construir prédios. Muito dinheiro.', acceptMoney:280, acceptEco:-25, refuseEco:8,  refuseMoney:0 },
+  { icon:'🌊', title:'Energia das Marés',     desc:'Projeto de energia renovável das marés. Caro mas sustentável!', acceptMoney:0,   acceptEco:22,  refuseEco:0,   refuseMoney:0, acceptIsEco:true },
+];
+
+const SHOP_ITEMS = [
+  { id:'tree',       icon:'🌳', name:'Árvore',       cost:30,   eco:8,   happy:3,   effect:'eco' },
+  { id:'solar',      icon:'☀️', name:'Energia Solar', cost:80,   eco:12,  happy:5,   effect:'eco' },
+  { id:'windmill',   icon:'💨', name:'Eólica',        cost:150,  eco:18,  happy:7,   effect:'eco' },
+  { id:'waterfilter',icon:'💧', name:'Filtro Água',   cost:100,  eco:10,  happy:10,  effect:'both' },
+  { id:'park',       icon:'🏞️', name:'Parque',        cost:200,  eco:20,  happy:15,  effect:'both' },
+  { id:'school',     icon:'🏫', name:'EcoEscola',     cost:400,  eco:15,  happy:20,  effect:'both' },
+];
+
+const UPGRADES = [
+  { id:'speed',    icon:'⏩', name:'Velocidade',   desc:'Esteira 15% mais rápida',       costs:[60,120,200,320,500,800,1200,1800],  maxLevel:8 },
+  { id:'capacity', icon:'📦', name:'Capacidade',   desc:'Mais itens simultâneos (+2)',    costs:[80,200,400,700,1100],               maxLevel:5 },
+  { id:'value',    icon:'💎', name:'Valor',         desc:'+R$1 por item coletado',        costs:[100,250,500,1000],                  maxLevel:4 },
+  { id:'auto',     icon:'🤖', name:'Automação',     desc:'Produz dinheiro sozinho (+1/s)',costs:[150,350,700],                       maxLevel:3 },
+  { id:'mult',     icon:'🔥', name:'Multiplicador', desc:'Coletora dobra valor',          costs:[500,1200],                          maxLevel:2 },
+];
+
+// City shop counts
+const shopCounts = {};
+SHOP_ITEMS.forEach(s => shopCounts[s.id] = 0);
+
+// ============================================================
+//  BELT LOGIC
+// ============================================================
+let beltItemsQueue = [];
+
+function getBeltDuration() {
+  // base 4s, each speed upgrade = 15% faster
+  return Math.max(1.0, 4 / (1 + G.upgSpeed * 0.15));
+}
+
+function spawnBeltItem(manual = false) {
+  if (G.itemsOnBelt >= G.beltCapacity) return false;
+  const bi = BELT_ITEMS[G.beltType];
+  const icon = bi.icons[Math.floor(Math.random() * bi.icons.length)];
+  const el = document.createElement('div');
+  el.className = 'belt-item';
+  el.textContent = icon;
+  const dur = getBeltDuration();
+  el.style.animationDuration = dur + 's';
+  // random vertical offset
+  el.style.top = (30 + Math.random() * 20) + '%';
+  document.getElementById('belt-container').appendChild(el);
+  G.itemsOnBelt++;
+  G.totalItems++;
+
+  // on finish
+  const timeout = dur * 1000;
+  setTimeout(() => {
+    el.remove();
+    G.itemsOnBelt = Math.max(0, G.itemsOnBelt - 1);
+    collectItem(bi.eco);
+  }, timeout - 50);
+
+  return true;
+}
+
+function collectItem(isEco) {
+  // beltItemValue = 1 + upgValue (each level adds R$1)
+  const baseVal = 1 + G.upgValue;
+  const mult = 1 + G.upgMult;
+  const happyBonus = 1 + (G.happy - 50) / 200;
+  const earned = Math.floor(baseVal * mult * happyBonus * (isEco ? 1 : 2.5));
+  G.money += earned;
+  G.totalEarned += earned;
+  G.xp += isEco ? 2 : 1;
+
+  if (isEco) {
+    G.eco = Math.min(100, G.eco + 0.3);
+  } else {
+    G.eco = Math.max(0, G.eco - 1.5);
+  }
+
+  showCoinPop('+' + earned + '💰');
+  updateUI();
+  checkLevel();
+}
+
+function showCoinPop(txt) {
+  const pop = document.createElement('div');
+  pop.className = 'coin-pop';
+  pop.textContent = txt;
+  document.getElementById('belt-container').appendChild(pop);
+  setTimeout(() => pop.remove(), 1000);
+}
+
+// ============================================================
+//  CLICK
+// ============================================================
+function clickProduce() {
+  if (!spawnBeltItem(true)) {
+    showToast('⚠️ Esteira cheia! Aguarde...', 'warn');
+    return;
+  }
+  const btn = document.getElementById('click-btn');
+  btn.style.transform = 'scale(0.93) translateY(4px)';
+  btn.style.boxShadow = '0 2px 0 ' + (G.polluting ? '#b91c1c' : '#15803d');
+  setTimeout(() => { btn.style.transform = ''; btn.style.boxShadow = ''; }, 100);
+}
+
+function toggleMode() {
+  G.polluting = !G.polluting;
+  const btn = document.getElementById('click-btn');
+  const tog = document.getElementById('mode-toggle');
+  if (G.polluting) {
+    G.beltType = 'industrial';
+    document.querySelectorAll('.belt-tab').forEach(t => t.classList.toggle('active', t.dataset.type === 'industrial'));
+    btn.classList.add('polluting');
+    btn.innerHTML = '<span class="btn-icon">🏭</span> Poluir!';
+    tog.textContent = '🌱 Modo Verde';
+    showToast('🏭 Modo Industrial! +💰 mas -🌿', 'warn');
+  } else {
+    G.beltType = 'green';
+    document.querySelectorAll('.belt-tab').forEach(t => t.classList.toggle('active', t.dataset.type === 'green'));
+    btn.classList.remove('polluting');
+    btn.innerHTML = '<span class="btn-icon">🌱</span> Produzir!';
+    tog.textContent = '🔄 Modo';
+    showToast('🌱 Modo Verde! +🌿 sustentabilidade', '');
+  }
+}
+
+function setBeltType(type) {
+  G.beltType = type;
+  document.querySelectorAll('.belt-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.type === type);
+  });
+  // update belt color
+  const bi = BELT_ITEMS[type];
+  document.getElementById('belt-container').style.background = adjustColor(bi.color);
+}
+
+function adjustColor(hex) {
+  // darken a bit for belt bg
+  return '#92400e'; // keep wood look
+}
+
+// ============================================================
+//  AUTO PRODUCTION — spawns items on belt automatically
+// ============================================================
+let autoIncomeTimer = 0;
+
+function tickAutoProduction(dt) {
+  if (G.upgAuto <= 0) return;
+  autoIncomeTimer += dt;
+  const rate = G.upgAuto; // items per second
+  while (autoIncomeTimer >= 1 / rate) {
+    autoIncomeTimer -= 1 / rate;
+    spawnBeltItem(false);
+  }
+}
+
+// ============================================================
+//  DECAY / GAIN
+// ============================================================
+function tickEcoDynamics(dt) {
+  const ecoSupport = (shopCounts.tree||0) * 0.05 + (shopCounts.solar||0) * 0.12 + (shopCounts.windmill||0) * 0.2 + (shopCounts.waterfilter||0) * 0.08;
+  let ecoChange = -G.ecoDecayRate * dt + ecoSupport * dt;
+  if (G.polluting) ecoChange -= 0.8 * dt;
+  G.eco = Math.max(0, Math.min(100, G.eco + ecoChange));
+
+  // happy depends on eco
+  const targetHappy = 40 + G.eco * 0.6 + (shopCounts.park || 0) * 5 + (shopCounts.school || 0) * 8;
+  G.happy += (targetHappy - G.happy) * 0.01 * dt;
+  G.happy = Math.max(0, Math.min(100, G.happy));
+
+  // game over check
+  if (G.eco <= 0 && !G.gameOver) triggerGameOver();
+}
+
+// ============================================================
+//  EVENTS
+// ============================================================
+let currentEvent = null;
+
+function tickEvents(dt) {
+  if (G.eventActive) return;
+  G.eventElapsed += dt;
+  if (G.eventElapsed >= G.nextEvent) {
+    G.eventElapsed = 0;
+    G.nextEvent = 25 + Math.random() * 35;
+    triggerEvent();
+  }
+}
+
+function triggerEvent() {
+  currentEvent = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  const ev = currentEvent;
+  document.getElementById('ev-icon').textContent = ev.icon;
+  document.getElementById('ev-title').textContent = ev.title;
+  document.getElementById('ev-desc').textContent = ev.desc;
+
+  // Aceitar effect text
+  const acceptEffects = [];
+  if (ev.acceptMoney > 0) acceptEffects.push('+' + ev.acceptMoney + '💰');
+  if (ev.acceptMoney < 0) acceptEffects.push(ev.acceptMoney + '💰');
+  if (ev.acceptEco > 0)   acceptEffects.push('+' + ev.acceptEco + '🌿');
+  if (ev.acceptEco < 0)   acceptEffects.push(ev.acceptEco + '🌿');
+  document.getElementById('ev-accept-effect').textContent = acceptEffects.join(' ');
+
+  // Recusar effect text
+  const refuseEffects = [];
+  if (ev.refuseMoney > 0) refuseEffects.push('+' + ev.refuseMoney + '💰');
+  if (ev.refuseEco > 0)   refuseEffects.push('+' + ev.refuseEco + '🌿');
+  if (ev.refuseEco < 0)   refuseEffects.push(ev.refuseEco + '🌿');
+  document.getElementById('ev-refuse-effect').textContent = refuseEffects.join(' ') || 'Sem alteração';
+
+  // Color buttons: green = eco gain, red = money gain but eco loss
+  const acceptBtn = document.querySelector('.event-accept');
+  const refuseBtn = document.querySelector('.event-refuse');
+  if (ev.acceptIsEco) {
+    // Aceitar is the eco choice
+    acceptBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+    acceptBtn.style.boxShadow = '0 4px 0 #15803d';
+    refuseBtn.style.background = 'linear-gradient(135deg, #94a3b8, #64748b)';
+    refuseBtn.style.boxShadow = '0 4px 0 #475569';
+  } else {
+    // Aceitar is the money (polluting) choice, Recusar is eco
+    acceptBtn.style.background = 'linear-gradient(135deg, #f87171, #ef4444)';
+    acceptBtn.style.boxShadow = '0 4px 0 #b91c1c';
+    refuseBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+    refuseBtn.style.boxShadow = '0 4px 0 #15803d';
+  }
+
+  document.getElementById('event-overlay').classList.add('show');
+  G.eventActive = true;
+}
+
+function resolveEvent(accept) {
+  if (!currentEvent) return;
+  const ev = currentEvent;
+  if (accept) {
+    G.money = Math.max(0, G.money + ev.acceptMoney);
+    G.eco = Math.max(0, Math.min(100, G.eco + ev.acceptEco));
+    if (ev.acceptIsEco) showToast('🌱 Aceito! Ótima escolha ecológica!', '');
+    else if (ev.acceptEco < 0) showToast('🏭 Aceito! +dinheiro mas -sustentabilidade', 'warn');
+    else showToast('✅ Aceito!', '');
+  } else {
+    // Recusar: only eco gain, zero money change
+    G.eco = Math.max(0, Math.min(100, G.eco + ev.refuseEco));
+    if (ev.refuseEco > 0) showToast('🌿 Recusado! Cidade mais verde!', '');
+    else showToast('😬 Recusado.', 'warn');
+  }
+  document.getElementById('event-overlay').classList.remove('show');
+  G.eventActive = false;
+  currentEvent = null;
+  updateUI();
+}
+
+// ============================================================
+//  MINIGAME
+// ============================================================
+let mgTimer = null, mgMistakes = 0, mgHits = 0, mgTime = 0;
+const RECYCLABLE = ['♻️','📦','🗃️','🥤','📰','🍶'];
+const ORGANIC = ['🍌','🍎','🥬','🍞','🐟','🌽'];
+
+function openMinigame() {
+  if (mgTimer) return;
+  if (G.gameOver || G.gameWon) return;
+  mgMistakes = 0;
+  mgHits = 0;
+  mgTime = 10;
+  document.getElementById('mg-score').textContent = '0 erros';
+  document.getElementById('mg-timer').textContent = mgTime;
+  buildMinigameItems(25);
+  document.getElementById('minigame-overlay').classList.add('show');
+  mgTimer = setInterval(() => {
+    mgTime--;
+    document.getElementById('mg-timer').textContent = mgTime;
+    if (mgTime <= 0) endMinigame();
+  }, 1000);
+}
+
+function buildMinigameItems(count) {
+  const area = document.getElementById('minigame-area');
+  area.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    area.appendChild(createTrashEl());
+  }
+}
+
+function createTrashEl() {
+  const isRec = Math.random() > 0.45;
+  const arr = isRec ? RECYCLABLE : ORGANIC;
+  const icon = arr[Math.floor(Math.random() * arr.length)];
+  const el = document.createElement('div');
+  el.className = 'trash-item';
+  el.textContent = icon;
+  el.dataset.rec = isRec ? '1' : '0';
+  el.onclick = () => {
+    if (el.dataset.rec === '1') {
+      mgHits++;
+      el.style.transform = 'scale(0) rotate(180deg)';
+      el.style.transition = '0.18s';
+      setTimeout(() => el.remove(), 180);
+    } else {
+      mgMistakes++;
+      el.style.background = '#fee2e2';
+      el.style.borderRadius = '8px';
+      el.style.outline = '2px solid #ef4444';
+      document.getElementById('mg-score').textContent = mgMistakes + (mgMistakes === 1 ? ' erro' : ' erros');
+    }
+  };
+  return el;
+}
+
+function endMinigame() {
+  clearInterval(mgTimer);
+  mgTimer = null;
+  // R$4 per hit (25 hits = R$100 max), minus R$25 per mistake, floor at 0
+  const gross = mgHits * 4;
+  const penalty = mgMistakes * 25;
+  const reward = Math.max(0, gross - penalty);
+  const ecoReward = Math.max(0, Math.floor(reward / 10));
+  G.money += reward;
+  G.eco = Math.min(100, G.eco + ecoReward);
+  const emoji = reward === 100 ? '🏆' : reward > 50 ? '😊' : reward > 0 ? '😅' : '😢';
+  const msg = mgMistakes === 0 && mgHits === 0
+    ? 'Nenhum item clicado!'
+    : mgMistakes === 0
+      ? `🏆 ${mgHits} acerto${mgHits > 1 ? 's' : ''}! Perfeito!`
+      : `${mgHits} acerto${mgHits !== 1 ? 's' : ''}, ${mgMistakes} erro${mgMistakes !== 1 ? 's' : ''}`;
+  document.getElementById('minigame-area').innerHTML = `
+    <div style="text-align:center;width:100%;padding:10px 0">
+      <div style="font-size:2.5em">${emoji}</div>
+      <div style="font-family:var(--font-head);font-size:1.05em;margin:6px 0;color:var(--eco-dark)">${msg}</div>
+      <div style="font-weight:800;font-size:1.2em;color:var(--money-dark)">${reward > 0 ? '+💰' + reward : '💰 R$0'}</div>
+      ${ecoReward > 0 ? `<div style="font-weight:700;color:var(--eco-dark)">+🌿${ecoReward}</div>` : ''}
+    </div>`;
+  if (reward > 0) showToast(`♻️ Mini-jogo: +💰${reward}!`, '');
+  else showToast('😢 Mini-jogo: sem ganhos!', 'warn');
+  updateUI();
+  setTimeout(() => closeMinigame(), 2500);
+}
+
+function closeMinigame() {
+  clearInterval(mgTimer);
+  mgTimer = null;
+  document.getElementById('minigame-overlay').classList.remove('show');
+}
+
+// ============================================================
+//  SHOP
+// ============================================================
+function renderShop() {
+  const grid = document.getElementById('shop-grid');
+  grid.innerHTML = '';
+  SHOP_ITEMS.forEach(item => {
+    const count = shopCounts[item.id] || 0;
+    const btn = document.createElement('button');
+    btn.className = 'shop-btn';
+    btn.disabled = G.money < item.cost;
+    btn.innerHTML = `
+      <span class="item-icon">${item.icon}</span>
+      <div>${item.name}</div>
+      <div class="item-cost">💰${item.cost}</div>
+      ${count > 0 ? `<div style="font-size:0.72em;color:var(--eco-dark);font-weight:800">✅ ${count} comprado${count>1?'s':''}</div>` : ''}
+    `;
+    btn.onclick = () => buyShop(item);
+    grid.appendChild(btn);
+  });
+}
+
+function buyShop(item) {
+  if (G.money < item.cost) { showToast('💸 Dinheiro insuficiente!', 'warn'); return; }
+  G.money -= item.cost;
+  shopCounts[item.id]++;
+  G.eco = Math.min(100, G.eco + item.eco);
+  G.happy = Math.min(100, G.happy + item.happy);
+  G.xp += 10;
+  showToast(`${item.icon} ${item.name} comprado! +${item.eco}🌿 +${item.happy}😊`, '');
+  updateUI();
+  renderShop();
+  renderUpgrades();
+  updateCityVisual();
+  checkLevel();
+}
+
+// ============================================================
+//  UPGRADES
+// ============================================================
+function getUpgradeLevel(id) {
+  return G['upg' + id.charAt(0).toUpperCase() + id.slice(1)] || 0;
+}
+
+function renderUpgrades() {
+  const list = document.getElementById('upgrade-list');
+  list.innerHTML = '';
+  UPGRADES.forEach(upg => {
+    const level = getUpgradeLevel(upg.id);
+    const maxed = level >= upg.maxLevel;
+    const cost = maxed ? 0 : upg.costs[level];
+    const btn = document.createElement('button');
+    btn.className = 'upgrade-btn';
+    btn.disabled = maxed || G.money < cost;
+    btn.innerHTML = `
+      <span class="upgrade-icon">${upg.icon}</span>
+      <div class="upgrade-info">
+        <div class="upgrade-name">${upg.name}</div>
+        <div style="font-size:0.78em;color:#6b7280">${upg.desc}</div>
+        ${maxed ? '' : `<div class="upgrade-cost">💰${cost}</div>`}
+      </div>
+      <div class="upgrade-level">${maxed ? 'MAX' : level + '/' + upg.maxLevel}</div>
+    `;
+    if (!maxed) btn.onclick = () => buyUpgrade(upg, level, cost);
+    list.appendChild(btn);
+  });
+}
+
+function buyUpgrade(upg, level, cost) {
+  if (G.money < cost) { showToast('💸 Dinheiro insuficiente!', 'warn'); return; }
+  G.money -= cost;
+  const key = 'upg' + upg.id.charAt(0).toUpperCase() + upg.id.slice(1);
+  G[key] = (G[key] || 0) + 1;
+  G.xp += 15;
+
+  // Apply effects
+  if (upg.id === 'capacity') G.beltCapacity = 3 + G.upgCapacity * 2;
+  if (upg.id === 'auto' && G.upgAuto === 1) showToast('🤖 Automação ativada! Produz itens sozinho!', '');
+
+  // unlock belt types
+  if (G.upgAuto >= 1) { G.unlockedRecycle = true; document.getElementById('tab-recycle').style.display = ''; }
+  if (G.upgValue >= 2) { G.unlockedEnergy = true; document.getElementById('tab-energy').style.display = ''; }
+
+  showToast(`${upg.icon} ${upg.name} nível ${G[key]}!`, '');
+  updateUI();
+  renderUpgrades();
+  renderShop();
+  checkLevel();
+}
+
+// ============================================================
+//  CITY VISUAL
+// ============================================================
+const cityScene = document.getElementById('city-scene');
+
+function initCityScene() {
+  // clouds
+  for (let i = 0; i < 5; i++) {
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const size = 60 + Math.random() * 80;
+    c.style.cssText = `width:${size}px;height:${size*0.6}px;top:${5+Math.random()*30}%;animation-duration:${20+Math.random()*30}s;animation-delay:${-Math.random()*30}s;`;
+    cityScene.appendChild(c);
+  }
+  // buildings
+  const positions = [5, 15, 22, 32, 45, 55, 65, 72, 82];
+  const heights = [80, 120, 100, 150, 90, 130, 110, 95, 140];
+  const widths = [40, 35, 50, 38, 45, 40, 35, 48, 42];
+  positions.forEach((pos, i) => {
+    const b = document.createElement('div');
+    b.className = 'city-building';
+    b.id = `bld-${i}`;
+    b.style.cssText = `left:${pos}%;width:${widths[i]}px;height:${heights[i]}px;background:#94a3b8;`;
+    // windows
+    for (let w = 0; w < Math.floor(heights[i]/22); w++) {
+      for (let col = 0; col < 3; col++) {
+        const win = document.createElement('div');
+        win.style.cssText = `position:absolute;width:8px;height:8px;background:${Math.random()>0.3?'#fde68a':'#374151'};border-radius:1px;left:${6+col*12}px;top:${8+w*20}px;`;
+        b.appendChild(win);
+      }
+    }
+    cityScene.appendChild(b);
+  });
+  // trees
+  for (let i = 0; i < 8; i++) {
+    const t = document.createElement('div');
+    t.className = 'tree-city';
+    t.id = `city-tree-${i}`;
+    t.textContent = '🌳';
+    t.style.cssText = `left:${8+i*11}%;bottom:${2+Math.random()*3}%;opacity:0;transform:scale(0.5);`;
+    cityScene.appendChild(t);
+  }
+}
+
+function updateCityVisual() {
+  const eco = G.eco;
+  // sky color
+  let skyColor;
+  if (eco > 70) skyColor = '#bae6fd';
+  else if (eco > 40) skyColor = '#e0f2fe';
+  else if (eco > 20) skyColor = '#f1f5f9';
+  else skyColor = '#d1d5db';
+  document.body.style.background = skyColor;
+  cityScene.style.background = `linear-gradient(180deg, ${skyColor} 0%, ${eco>60?'#86efac':'#a3a3a3'} 100%)`;
+
+  // buildings tint
+  document.querySelectorAll('.city-building').forEach(b => {
+    if (eco > 70) b.style.background = '#7dd3fc';
+    else if (eco > 40) b.style.background = '#94a3b8';
+    else b.style.background = '#6b7280';
+    b.style.boxShadow = eco < 30 ? '0 0 20px rgba(107,114,128,0.4)' : 'none';
+  });
+
+  // trees appear with eco
+  const treeCount = Math.floor(eco / 12.5); // 0–8
+  document.querySelectorAll('.tree-city').forEach((t, i) => {
+    const vis = i < treeCount + shopCounts.park * 2;
+    t.style.opacity = vis ? '1' : '0';
+    t.style.transform = vis ? 'scale(1)' : 'scale(0.3)';
+  });
+
+  // clouds dark with pollution
+  document.querySelectorAll('.cloud').forEach(c => {
+    c.style.background = eco < 30 ? '#9ca3af' : 'white';
+    c.style.opacity = eco < 30 ? '0.9' : '0.65';
+  });
+}
+
+function tickSmoke(dt) {
+  if (G.eco < 40 || G.polluting) {
+    G.smokeTimer += dt;
+    if (G.smokeTimer > 1.5) {
+      G.smokeTimer = 0;
+      spawnSmoke();
+    }
+  }
+}
+
+function spawnSmoke() {
+  const s = document.createElement('div');
+  s.className = 'smoke-particle';
+  s.style.left = (10 + Math.random() * 80) + '%';
+  cityScene.appendChild(s);
+  setTimeout(() => s.remove(), 3100);
+}
+
+// ============================================================
+//  LEVEL
+// ============================================================
+function checkLevel() {
+  let lvl = 0;
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (G.xp >= LEVELS[i].xp) { lvl = i; break; }
+  }
+  if (lvl > G.level) {
+    G.level = lvl;
+    const l = LEVELS[lvl];
+    document.getElementById('level-icon').textContent = l.icon;
+    document.getElementById('level-name').textContent = l.name;
+
+    // Last level = win!
+    if (lvl === LEVELS.length - 1) {
+      setTimeout(() => triggerWin(), 800);
+      return;
+    }
+
+    // Show level up modal
+    document.getElementById('lu-icon').textContent = l.icon;
+    document.getElementById('lu-name').textContent = l.name;
+    const msgs = [
+      'Continue produzindo e comprando melhorias!',
+      'Sua cidade está crescendo! Invista em árvores e energia solar.',
+      'Ótimo trabalho! Cuidado com a sustentabilidade.',
+      'Incrível! Você está perto do topo. Não baixe a guarda!',
+      'Quase lá! O EcoParaíso está ao alcance!',
+    ];
+    document.getElementById('lu-desc').textContent = msgs[Math.min(lvl - 1, msgs.length - 1)];
+    document.getElementById('levelup-overlay').style.display = 'flex';
+  }
+}
+
+function closeLevelUp() {
+  document.getElementById('levelup-overlay').style.display = 'none';
+}
+
+function triggerGameOver() {
+  if (G.gameOver) return;
+  G.gameOver = true;
+  document.getElementById('go-money').textContent = formatNum(G.totalEarned);
+  document.getElementById('go-xp').textContent = G.xp;
+  document.getElementById('gameover-overlay').style.display = 'flex';
+}
+
+function triggerWin() {
+  if (G.gameWon) return;
+  G.gameWon = true;
+  document.getElementById('win-money').textContent = formatNum(G.totalEarned);
+  document.getElementById('win-eco').textContent = Math.round(G.eco);
+  document.getElementById('win-xp').textContent = G.xp;
+  document.getElementById('win-overlay').style.display = 'flex';
+}
+
+function restartGame() {
+  location.reload();
+}
+
+// ============================================================
+//  UI UPDATE
+// ============================================================
+function updateUI() {
+  document.getElementById('money-display').textContent = formatNum(G.money);
+  document.getElementById('eco-display').textContent = Math.round(G.eco);
+  document.getElementById('happy-display').textContent = Math.round(G.happy);
+
+  document.getElementById('eco-pct').textContent = Math.round(G.eco) + '%';
+  document.getElementById('happy-pct').textContent = Math.round(G.happy) + '%';
+
+  document.getElementById('eco-bar').style.width = G.eco + '%';
+  document.getElementById('happy-bar').style.width = G.happy + '%';
+
+  // production per sec estimate (items/sec auto * value per item)
+  const baseVal2 = 1 + G.upgValue;
+  const mult2 = 1 + G.upgMult;
+  const happyBonus2 = 1 + (G.happy - 50) / 200;
+  const itemVal = Math.floor(baseVal2 * mult2 * happyBonus2);
+  const prodPerSec = G.upgAuto * itemVal;
+  document.getElementById('prod-display').textContent = prodPerSec > 0 ? '+' + prodPerSec + '/s' : 'Manual';
+  document.getElementById('prod-bar').style.width = Math.min(100, prodPerSec * 5) + '%';
+
+  // xp
+  const curLvl = LEVELS[G.level];
+  const nextLvl = LEVELS[G.level + 1];
+  const xpPct = nextLvl ? Math.min(100, ((G.xp - curLvl.xp) / (nextLvl.xp - curLvl.xp)) * 100) : 100;
+  document.getElementById('progress-bar-fill').style.width = xpPct + '%';
+  document.getElementById('level-xp').textContent = G.xp + ' XP';
+
+  // disable shop/upgrade buttons
+  renderShop();
+  renderUpgrades();
+}
+
+function formatNum(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return Math.floor(n);
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type === 'warn' ? 'warn-toast' : type === 'money' ? 'money-toast' : '');
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ============================================================
+//  MAIN LOOP
+// ============================================================
+let frameCount = 0, lastFps = Date.now();
+
+function gameLoop() {
+  const now = Date.now();
+  G.tickDelta = Math.min((now - G.lastTick) / 1000, 0.25);
+  G.lastTick = now;
+  const dt = G.tickDelta;
+
+  if (!G.gameOver && !G.gameWon) {
+    tickAutoProduction(dt);
+    tickEcoDynamics(dt);
+    tickEvents(dt);
+    tickSmoke(dt);
+    updateCityVisual();
+  }
+
+  // fps
+  frameCount++;
+  if (now - lastFps > 2000) {
+    document.getElementById('fps-counter').textContent = Math.round(frameCount / ((now-lastFps)/1000)) + ' fps';
+    frameCount = 0;
+    lastFps = now;
+    if (!G.gameOver && !G.gameWon) updateUI();
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+initCityScene();
+renderShop();
+renderUpgrades();
+updateUI();
+updateCityVisual();
+gameLoop();
+
+// first event hint
+setTimeout(() => showToast('👋 Clique em Produzir! para começar!', ''), 1000);
+setTimeout(() => showToast('💡 Dica: compre Árvores para +sustentabilidade', ''), 4000);
+</script>
+</body>
+</html>

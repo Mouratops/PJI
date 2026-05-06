@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoClicker — Salve o Planeta</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #4ade80; --teal: #2dd4bf; --amber: #fbbf24; --red: #f87171;
+  --eco: #22c55e; --bg: #0a0f0a;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8f5e9;
+  --muted: rgba(232,245,233,0.45);
+  --font-display: 'Nunito', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body { font-family: var(--font-display); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; }
+
+#stars-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+.particle { position: fixed; pointer-events: none; font-size: 13px; font-weight: 800; color: var(--eco); z-index: 999; animation: particle-rise 1s ease-out forwards; white-space: nowrap; }
+@keyframes particle-rise { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(0.6)} }
+
+#app { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 320px; grid-template-rows: auto 1fr; min-height: 100vh; max-width: 1100px; margin: 0 auto; width: 100%; padding: 16px; gap: 16px; }
+
+#header { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; backdrop-filter: blur(12px); }
+#logo { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; color: var(--eco); }
+#logo span { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 8px; }
+#header-stats { display: flex; gap: 24px; align-items: center; }
+.hstat { display: flex; flex-direction: column; align-items: flex-end; }
+.hstat-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; }
+.hstat-val { font-size: 20px; font-weight: 900; line-height: 1; color: var(--text); }
+.hstat-val.eco { color: var(--eco); }
+
+#left { display: flex; flex-direction: column; gap: 14px; }
+
+#planet-area { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; min-height: 320px; }
+#sky-bg { position: absolute; inset: 0; border-radius: 20px; transition: background 3s ease; background: radial-gradient(ellipse at 50% 70%, #1a0808, #0d0505); }
+#planet-container { position: relative; z-index: 2; margin: 16px 0 20px; }
+
+#planet-btn { width: 160px; height: 160px; border-radius: 50%; border: none; cursor: pointer; background: transparent; display: flex; align-items: center; justify-content: center; transition: transform 0.12s cubic-bezier(.34,1.56,.64,1); position: relative; -webkit-tap-highlight-color: transparent; padding: 0; }
+#planet-btn:hover  { transform: scale(1.06); }
+#planet-btn:active { transform: scale(0.93); }
+#planet-svg { width: 150px; height: 150px; border-radius: 50%; display: block; filter: drop-shadow(0 0 28px rgba(0,0,0,0.7)); overflow: visible; }
+
+#planet-ring { position: absolute; inset: -12px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.06); animation: ring-spin 12s linear infinite; pointer-events: none; transition: border-color 1s; }
+#planet-ring::after { content: ''; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--eco); top: 4px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 8px var(--eco); }
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+
+#phase-badge { position: relative; z-index: 2; font-size: 12px; font-weight: 700; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+
+#health-section { position: relative; z-index: 2; width: 100%; padding: 0 8px; }
+#health-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+#health-title { font-size: 11px; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; }
+#health-pct { font-size: 18px; font-weight: 900; color: var(--eco); font-family: var(--font-mono); }
+#health-track { height: 12px; background: rgba(0,0,0,0.4); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
+#health-fill { height: 100%; border-radius: 6px; transition: width 0.6s cubic-bezier(.4,0,.2,1), background 2s; background: linear-gradient(90deg, #16a34a, var(--eco)); box-shadow: 0 0 10px rgba(74,222,128,0.4); }
+#click-hint { position: relative; z-index: 2; font-size: 11px; color: var(--muted); margin-top: 8px; font-family: var(--font-mono); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+#event-box { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25); border-radius: 14px; padding: 14px 16px; display: none; animation: slideDown 0.3s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+#event-icon { font-size: 22px; margin-bottom: 6px; }
+#event-text { font-size: 13px; font-weight: 700; color: #fbbf24; margin-bottom: 10px; line-height: 1.4; }
+#event-btns { display: flex; gap: 8px; }
+.ev-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 700; cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text); font-family: var(--font-display); transition: background 0.15s, transform 0.1s; }
+.ev-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+.ev-btn.yes { border-color: rgba(74,222,128,0.3); color: var(--eco); }
+.ev-btn.no  { border-color: rgba(248,113,113,0.3); color: var(--red); }
+
+#milestones-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+.milestone { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 6px; text-align: center; transition: border-color 0.4s, background 0.4s; }
+.milestone.reached { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.06); }
+.ms-icon { font-size: 20px; display: block; margin-bottom: 3px; filter: grayscale(1); transition: filter 0.5s; }
+.milestone.reached .ms-icon { filter: grayscale(0); }
+.ms-label { font-size: 9px; color: var(--muted); font-family: var(--font-mono); }
+
+#right { display: flex; flex-direction: column; gap: 14px; }
+#mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mstat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.mstat-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.mstat-val { font-size: 18px; font-weight: 900; color: var(--eco); font-family: var(--font-mono); }
+
+#shop { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; flex: 1; display: flex; flex-direction: column; }
+#shop-header { padding: 14px 16px 0; }
+#shop-title { font-size: 11px; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+#shop-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.shop-tab { flex: 1; padding: 6px 4px; background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700; color: var(--muted); font-family: var(--font-display); transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.shop-tab .tab-icon { font-size: 16px; }
+.shop-tab:hover:not(.tab-locked) { color: var(--text); background: rgba(255,255,255,0.04); }
+.shop-tab.active { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.25); color: var(--eco); }
+.shop-tab.tab-locked { opacity: 0.38; cursor: not-allowed; }
+.lock-icon { font-size: 10px; }
+
+#shop-items { padding: 10px 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; max-height: 420px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+
+#shop-locked-msg { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; gap: 8px; }
+.lock-big { font-size: 36px; margin-bottom: 4px; }
+.lock-title { font-size: 14px; font-weight: 800; color: var(--amber); }
+.lock-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+.upg-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.upg-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: var(--eco); opacity: 0; transition: opacity 0.2s; }
+.upg-item:hover:not(.cant-afford):not(.owned)::before { opacity: 1; }
+.upg-item:hover:not(.cant-afford):not(.owned) { background: rgba(255,255,255,0.06); border-color: rgba(74,222,128,0.2); transform: translateX(2px); }
+.upg-item.cant-afford { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+.upg-item.owned { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.04); cursor: default; pointer-events: none; }
+.upg-item.owned::before { opacity: 1; background: rgba(74,222,128,0.5); }
+.upg-icon-box { font-size: 24px; width: 36px; text-align: center; flex-shrink: 0; }
+.upg-body { flex: 1; min-width: 0; }
+.upg-name { font-size: 12px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upg-desc { font-size: 10px; color: var(--muted); margin-top: 1px; line-height: 1.3; }
+.upg-badges { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); }
+.badge-cpc  { background: rgba(45,212,191,0.15); color: var(--teal); }
+.badge-cps  { background: rgba(251,191,36,0.15); color: var(--amber); }
+.badge-hp   { background: rgba(74,222,128,0.15); color: var(--eco); }
+.badge-cost { background: rgba(74,222,128,0.12); color: var(--eco); border: 1px solid rgba(74,222,128,0.2); font-size: 10px; padding: 3px 8px; }
+.badge-owned{ background: rgba(74,222,128,0.15); color: var(--eco); font-size: 10px; padding: 3px 8px; }
+
+#win-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+#win-card { background: linear-gradient(145deg, #0a1a0a, #0d2a1a); border: 1px solid rgba(74,222,128,0.35); border-radius: 24px; padding: 48px 40px; text-align: center; max-width: 400px; width: 90%; animation: winPop 0.5s cubic-bezier(.34,1.56,.64,1); }
+@keyframes winPop { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+#win-planet { margin-bottom: 16px; display: flex; justify-content: center; animation: winFloat 3s ease-in-out infinite; }
+#win-planet svg { width: 100px; height: 100px; }
+@keyframes winFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+#win-title { font-size: 28px; font-weight: 900; color: var(--eco); margin-bottom: 8px; }
+#win-sub { font-size: 14px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+#win-stats { font-size: 12px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 24px; }
+#win-btn { padding: 14px 32px; border-radius: 12px; background: var(--eco); border: none; cursor: pointer; font-size: 15px; font-weight: 900; color: #0a1a0a; font-family: var(--font-display); transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 0 30px rgba(74,222,128,0.4); }
+#win-btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(74,222,128,0.6); }
+
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: rgba(20,40,20,0.95); border: 1px solid rgba(74,222,128,0.3); border-radius: 10px; padding: 10px 18px; font-size: 13px; font-weight: 700; color: var(--eco); z-index: 998; transition: transform 0.3s ease; pointer-events: none; white-space: nowrap; }
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+@media (max-width: 700px) {
+  #app { grid-template-columns: 1fr; padding: 10px; gap: 10px; }
+  #header { flex-wrap: wrap; gap: 10px; }
+  #planet-btn { width: 130px; height: 130px; }
+  #planet-svg { width: 120px; height: 120px; }
+  #shop-items { max-height: 280px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<!-- Hidden SVG planet library -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" id="planet-lib">
+  <defs>
+    <!-- gradients -->
+    <radialGradient id="gp0" cx="40%" cy="35%"><stop offset="0%" stop-color="#c47a30" stop-opacity="0.55"/><stop offset="100%" stop-color="#1a0808" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gp1" cx="40%" cy="35%"><stop offset="0%" stop-color="#8888aa" stop-opacity="0.35"/><stop offset="100%" stop-color="#0a0a18" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gp2" cx="38%" cy="33%"><stop offset="0%" stop-color="#4a9aaa" stop-opacity="0.4"/><stop offset="100%" stop-color="#071520" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gp3" cx="38%" cy="33%"><stop offset="0%" stop-color="#5ab8e0" stop-opacity="0.45"/><stop offset="100%" stop-color="#051830" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gp4" cx="36%" cy="32%"><stop offset="0%" stop-color="#70c8f8" stop-opacity="0.55"/><stop offset="100%" stop-color="#030f25" stop-opacity="0"/></radialGradient>
+
+    <!-- PHASE 0: Altamente poluída -->
+    <g id="pp0">
+      <circle cx="75" cy="75" r="75" fill="#2a1408"/>
+      <circle cx="75" cy="75" r="75" fill="url(#gp0)"/>
+      <ellipse cx="65" cy="55" rx="28" ry="22" fill="#8B4513" opacity="0.9"/>
+      <ellipse cx="85" cy="80" rx="22" ry="16" fill="#A0522D" opacity="0.8"/>
+      <ellipse cx="45" cy="85" rx="14" ry="10" fill="#7a3a10" opacity="0.7"/>
+      <ellipse cx="100" cy="50" rx="12" ry="9" fill="#8B4513" opacity="0.75"/>
+      <ellipse cx="60" cy="35" rx="40" ry="25" fill="#5a4a3a" opacity="0.55"/>
+      <ellipse cx="90" cy="95" rx="38" ry="22" fill="#4a3a2a" opacity="0.45"/>
+      <ellipse cx="30" cy="70" rx="30" ry="20" fill="#503820" opacity="0.4"/>
+      <ellipse cx="48" cy="38" rx="22" ry="14" fill="white" opacity="0.06"/>
+    </g>
+
+    <!-- PHASE 1: Ainda poluída c/ melhoras -->
+    <g id="pp1">
+      <circle cx="75" cy="75" r="75" fill="#1c1c2a"/>
+      <circle cx="75" cy="75" r="75" fill="url(#gp1)"/>
+      <ellipse cx="75" cy="75" rx="60" ry="55" fill="#2a3040" opacity="0.8"/>
+      <ellipse cx="62" cy="52" rx="26" ry="20" fill="#4a5240" opacity="0.85"/>
+      <ellipse cx="90" cy="78" rx="20" ry="15" fill="#3d4835" opacity="0.8"/>
+      <ellipse cx="50" cy="88" rx="13" ry="9" fill="#424035" opacity="0.7"/>
+      <ellipse cx="55" cy="38" rx="38" ry="20" fill="#4a4a5a" opacity="0.4"/>
+      <ellipse cx="95" cy="100" rx="35" ry="18" fill="#3a3a4a" opacity="0.35"/>
+      <ellipse cx="38" cy="72" rx="18" ry="14" fill="#2d3a4a" opacity="0.6"/>
+      <ellipse cx="48" cy="38" rx="20" ry="13" fill="white" opacity="0.07"/>
+    </g>
+
+    <!-- PHASE 2: Em transição -->
+    <g id="pp2">
+      <circle cx="75" cy="75" r="75" fill="#0d2035"/>
+      <circle cx="75" cy="75" r="75" fill="url(#gp2)"/>
+      <ellipse cx="75" cy="75" rx="65" ry="60" fill="#1a4060" opacity="0.85"/>
+      <ellipse cx="60" cy="50" rx="28" ry="21" fill="#3a5030" opacity="0.9"/>
+      <ellipse cx="88" cy="76" rx="22" ry="17" fill="#4a6038" opacity="0.85"/>
+      <ellipse cx="48" cy="86" rx="14" ry="10" fill="#3a4a28" opacity="0.75"/>
+      <ellipse cx="102" cy="52" rx="11" ry="8" fill="#405535" opacity="0.7"/>
+      <ellipse cx="52" cy="36" rx="22" ry="10" fill="white" opacity="0.18"/>
+      <ellipse cx="95" cy="95" rx="18" ry="8" fill="white" opacity="0.14"/>
+      <ellipse cx="48" cy="38" rx="22" ry="14" fill="white" opacity="0.08"/>
+    </g>
+
+    <!-- PHASE 3: Quase limpa -->
+    <g id="pp3">
+      <circle cx="75" cy="75" r="75" fill="#083060"/>
+      <circle cx="75" cy="75" r="75" fill="url(#gp3)"/>
+      <ellipse cx="75" cy="75" rx="68" ry="64" fill="#1a60a0" opacity="0.9"/>
+      <ellipse cx="58" cy="48" rx="30" ry="23" fill="#2d6e1a" opacity="0.92"/>
+      <ellipse cx="90" cy="75" rx="24" ry="18" fill="#3a8020" opacity="0.88"/>
+      <ellipse cx="46" cy="88" rx="15" ry="11" fill="#286018" opacity="0.8"/>
+      <ellipse cx="104" cy="52" rx="12" ry="9" fill="#2a6016" opacity="0.75"/>
+      <ellipse cx="50" cy="35" rx="26" ry="11" fill="white" opacity="0.3"/>
+      <ellipse cx="90" cy="98" rx="22" ry="9" fill="white" opacity="0.22"/>
+      <ellipse cx="46" cy="38" rx="24" ry="15" fill="white" opacity="0.09"/>
+    </g>
+
+    <!-- PHASE 4: Planeta Terra perfeito -->
+    <g id="pp4">
+      <circle cx="75" cy="75" r="75" fill="#04244a"/>
+      <circle cx="75" cy="75" r="75" fill="url(#gp4)"/>
+      <ellipse cx="75" cy="75" rx="70" ry="67" fill="#1666b0" opacity="0.95"/>
+      <ellipse cx="56" cy="46" rx="30" ry="25" fill="#1a7a0a" opacity="0.95"/>
+      <ellipse cx="70" cy="78" rx="20" ry="28" fill="#228B22" opacity="0.9"/>
+      <ellipse cx="92" cy="70" rx="25" ry="20" fill="#1a7a0a" opacity="0.88"/>
+      <ellipse cx="44" cy="90" rx="16" ry="12" fill="#186010" opacity="0.85"/>
+      <ellipse cx="106" cy="50" rx="12" ry="9" fill="#1a7a0a" opacity="0.8"/>
+      <ellipse cx="75" cy="12" rx="20" ry="10" fill="white" opacity="0.7"/>
+      <ellipse cx="75" cy="138" rx="18" ry="9" fill="white" opacity="0.6"/>
+      <ellipse cx="48" cy="33" rx="28" ry="13" fill="white" opacity="0.45"/>
+      <ellipse cx="96" cy="95" rx="24" ry="10" fill="white" opacity="0.38"/>
+      <ellipse cx="112" cy="62" rx="16" ry="7" fill="white" opacity="0.35"/>
+      <ellipse cx="46" cy="36" rx="26" ry="16" fill="white" opacity="0.11"/>
+    </g>
+  </defs>
+</svg>
+
+<div id="app">
+  <header id="header">
+    <div id="logo">EcoClicker <span>♻ Salve o Planeta</span></div>
+    <div id="header-stats">
+      <div class="hstat"><span class="hstat-label">EcoPontos</span><span class="hstat-val eco" id="pts-display">0</span></div>
+      <div class="hstat"><span class="hstat-label">Total ganho</span><span class="hstat-val" id="total-display">0</span></div>
+    </div>
+  </header>
+
+  <main id="left">
+    <div id="planet-area">
+      <div id="sky-bg"></div>
+      <div id="phase-badge">Fase 1 — Altamente Poluída</div>
+      <div id="planet-container">
+        <div id="planet-ring"></div>
+        <button id="planet-btn" title="Clique para ganhar EcoPontos!">
+          <svg id="planet-svg" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg"><use id="planet-use" href="#pp0"/></svg>
+        </button>
+      </div>
+      <div id="health-section">
+        <div id="health-row">
+          <span id="health-title">🌍 Saúde do Planeta</span>
+          <span id="health-pct">0%</span>
+        </div>
+        <div id="health-track"><div id="health-fill" style="width:0%"></div></div>
+      </div>
+      <div id="click-hint">▲ Clique no planeta para começar ▲</div>
+    </div>
+
+    <div id="event-box">
+      <div id="event-icon">⚠️</div>
+      <div id="event-text">Evento!</div>
+      <div id="event-btns">
+        <button class="ev-btn yes" id="ev-yes">✓ Aceitar</button>
+        <button class="ev-btn no"  id="ev-no">✗ Recusar</button>
+      </div>
+    </div>
+
+    <div id="milestones-row">
+      <div class="milestone" id="ms-0"><span class="ms-icon">💀</span><span class="ms-label">Destruído</span></div>
+      <div class="milestone" id="ms-1"><span class="ms-icon">🌫️</span><span class="ms-label">Poluído</span></div>
+      <div class="milestone" id="ms-2"><span class="ms-icon">🌱</span><span class="ms-label">Transição</span></div>
+      <div class="milestone" id="ms-3"><span class="ms-icon">🌿</span><span class="ms-label">Quase limpo</span></div>
+      <div class="milestone" id="ms-4"><span class="ms-icon">🌍</span><span class="ms-label">Perfeito</span></div>
+    </div>
+  </main>
+
+  <aside id="right">
+    <div id="mini-stats">
+      <div class="mstat"><div class="mstat-label">Por clique</div><div class="mstat-val" id="cpc-display">1</div></div>
+      <div class="mstat"><div class="mstat-label">Por segundo</div><div class="mstat-val" id="cps-display">0</div></div>
+    </div>
+    <div id="shop">
+      <div id="shop-header">
+        <div id="shop-title">Melhorias</div>
+        <div id="shop-tabs">
+          <button class="shop-tab active" data-tab="limpeza" id="tab-limpeza"><span class="tab-icon">🌿</span>Limpeza</button>
+          <button class="shop-tab"        data-tab="natureza" id="tab-natureza"><span class="tab-icon">🌱</span>Natureza</button>
+          <button class="shop-tab tab-locked" data-tab="energia" id="tab-energia"><span class="tab-icon">⚡</span>Energia<span class="lock-icon">🔒</span></button>
+          <button class="shop-tab tab-locked" data-tab="cidade"  id="tab-cidade"><span class="tab-icon">🏙️</span>Cidade<span class="lock-icon">🔒</span></button>
+        </div>
+      </div>
+      <div id="shop-items"></div>
+      <div id="shop-locked-msg">
+        <div class="lock-big">🔒</div>
+        <div class="lock-title" id="lock-title">Categoria Bloqueada</div>
+        <div class="lock-desc"  id="lock-desc">Alcance a fase necessária.</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div id="win-overlay">
+  <div id="win-card">
+    <div id="win-planet">
+      <svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg"><use href="#pp4"/></svg>
+    </div>
+    <div id="win-title">Planeta Restaurado!</div>
+    <div id="win-sub">Você salvou a Terra! O céu voltou a ser azul, os oceanos estão limpos e a vida floresce novamente.</div>
+    <div id="win-stats"></div>
+    <button id="win-btn" onclick="resetGame()">🔄 Jogar Novamente</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────
+// phaseIdx required to unlock each tab (0=always available)
+const TAB_UNLOCK = { limpeza:0, natureza:0, energia:2, cidade:3 };
+const TAB_LOCK_MSG = {
+  energia: 'Disponível na Fase 3 (Em Transição).\nAtinja 40% de saúde do planeta.',
+  cidade:  'Disponível na Fase 4 (Quase Limpa).\nAtinja 60% de saúde do planeta.',
+};
+
+const UPGRADES = {
+  limpeza: [
+    { id:'trash',    name:'Coletar Lixo',          icon:'🗑️',  desc:'Remove resíduos sólidos das ruas.',    cost:15,   cpc:2, cps:0, hp:2  },
+    { id:'plastic',  name:'Recolher Plásticos',     icon:'🧴',  desc:'Elimina microplásticos do solo.',      cost:50,   cpc:3, cps:0, hp:3  },
+    { id:'ocean',    name:'Limpar Oceano',           icon:'🌊',  desc:'Filtra poluentes marinhos.',           cost:80,   cpc:0, cps:1, hp:5  },
+    { id:'air',      name:'Filtrar Ar',              icon:'🌫️', desc:'Reduz emissões de CO₂.',              cost:160,  cpc:3, cps:0, hp:6  },
+    { id:'recycle',  name:'Centro de Reciclagem',    icon:'♻️',  desc:'Processa lixo automaticamente.',      cost:420,  cpc:0, cps:2, hp:8  },
+    { id:'toxic',    name:'Descontaminar Solo',      icon:'☣️',  desc:'Remove toxinas do solo.',             cost:900,  cpc:0, cps:3, hp:10 },
+  ],
+  natureza: [
+    { id:'tree',     name:'Plantar Árvores',         icon:'🌳',  desc:'Cada clique planta uma árvore.',      cost:40,   cpc:3, cps:0, hp:3  },
+    { id:'flowers',  name:'Semear Flores',            icon:'🌸',  desc:'Biodiversidade floral retorna.',      cost:100,  cpc:4, cps:0, hp:4  },
+    { id:'forest',   name:'Criar Florestas',          icon:'🌲',  desc:'Reflorestamento em massa.',           cost:260,  cpc:0, cps:2, hp:7  },
+    { id:'bird',     name:'Reintroduzir Aves',        icon:'🐦',  desc:'Avifauna nativa retorna.',            cost:600,  cpc:0, cps:5, hp:10 },
+    { id:'coral',    name:'Restaurar Corais',         icon:'🐠',  desc:'Recifes de corais revivem.',          cost:1100, cpc:0, cps:4, hp:12 },
+    { id:'animals',  name:'Vida Selvagem',            icon:'🐾',  desc:'Animais voltam em bandos.',           cost:2200, cpc:0, cps:8, hp:15 },
+  ],
+  energia: [
+    { id:'solar',    name:'Energia Solar',            icon:'☀️',  desc:'Painéis fotovoltaicos.',             cost:90,   cpc:4, cps:0, hp:5  },
+    { id:'wind',     name:'Energia Eólica',           icon:'💨',  desc:'Turbinas litorâneas.',               cost:320,  cpc:0, cps:3, hp:8  },
+    { id:'hydro',    name:'Energia Hidrelétrica',     icon:'💧',  desc:'Aproveitamento sustentável.',        cost:700,  cpc:0, cps:4, hp:10 },
+    { id:'coal_off', name:'Banir Carvão',              icon:'🚫',  desc:'Elimina a principal fonte de CO₂.', cost:1100, cpc:0, cps:5, hp:12 },
+    { id:'oil_off',  name:'Banir Petróleo',            icon:'🛢️',  desc:'Transição energética completa.',    cost:2000, cpc:0, cps:8, hp:15 },
+    { id:'fusion',   name:'Energia de Fusão',          icon:'⚛️',  desc:'Energia limpa infinita.',           cost:4500, cpc:0, cps:14,hp:20 },
+  ],
+  cidade: [
+    { id:'house',    name:'Casas Sustentáveis',       icon:'🏠',  desc:'Habitação ecológica.',               cost:180,  cpc:5, cps:0, hp:5  },
+    { id:'park',     name:'Parques Urbanos',           icon:'🏞️',  desc:'Espaços verdes na cidade.',         cost:500,  cpc:0, cps:3, hp:8  },
+    { id:'transport',name:'Transporte Limpo',          icon:'🚲',  desc:'Trens elétricos e bicicletas.',     cost:900,  cpc:0, cps:4, hp:10 },
+    { id:'green_c',  name:'Cidade Verde',              icon:'🌿',  desc:'Infraestrutura 100% ecológica.',    cost:1800, cpc:0, cps:6, hp:12 },
+    { id:'lab',      name:'Laboratórios Verdes',       icon:'🔬',  desc:'Pesquisa sustentável.',             cost:2500, cpc:5, cps:0, hp:12 },
+    { id:'tech',     name:'Tecnologia Sustentável',    icon:'🤖',  desc:'IA para otimizar o planeta.',       cost:5000, cpc:0, cps:12,hp:20 },
+  ],
+};
+
+const PHASES = [
+  { min:0,  max:20,  svgId:'pp0', label:'Altamente Poluída',          skyC:'#1a0808,#0d0505', ringColor:'rgba(180,80,80,0.35)'  },
+  { min:20, max:40,  svgId:'pp1', label:'Ainda Poluída, c/ Melhoras', skyC:'#111118,#1a1a2a', ringColor:'rgba(150,150,200,0.3)' },
+  { min:40, max:60,  svgId:'pp2', label:'Em Transição',               skyC:'#091525,#0d2a3d', ringColor:'rgba(74,180,160,0.4)'  },
+  { min:60, max:80,  svgId:'pp3', label:'Quase Limpa',                skyC:'#061410,#0d3a1e', ringColor:'rgba(74,222,128,0.5)'  },
+  { min:80, max:101, svgId:'pp4', label:'Planeta Terra — Perfeito',   skyC:'#061020,#0d3a6a', ringColor:'rgba(74,180,255,0.6)'  },
+];
+
+const EVENTS = [
+  { icon:'🏭', text:'Uma fábrica quer se instalar. Aceitar?',         yes:{pts:300,  hp:-8,  msg:'💰 +300 pts, mas a poluição aumentou!'},     no:{pts:0,   hp:4,  msg:'✅ Boa decisão! O planeta agradece.'} },
+  { icon:'☔', text:'Chuva ácida se aproxima! Investir em proteção?', yes:{pts:-100, hp:6,   msg:'🛡️ Planeta protegido!'},                      no:{pts:0,   hp:-10,msg:'💀 A chuva ácida causou danos...'} },
+  { icon:'🔬', text:'Cientistas pedem fundos para pesquisa verde.',    yes:{pts:-120, hp:12,  msg:'🧪 Pesquisa avança! +12 saúde'},              no:{pts:0,   hp:0,  msg:'😐 Oportunidade perdida.'} },
+  { icon:'🛢️', text:'Empresa de mineração offshore. Autorizar?',      yes:{pts:400,  hp:-12, msg:'💰 +400 pts, oceanos contaminados!'},         no:{pts:-50, hp:8,  msg:'🌊 Oceanos protegidos!'} },
+  { icon:'🌧️', text:'Chuva limpa está chegando! Aproveitar?',         yes:{pts:50,   hp:8,   msg:'🌧️ Chuva renovadora! +8 saúde'},             no:{pts:0,   hp:3,  msg:'☁️ Passou um pouco de chuva.'} },
+  { icon:'♻️', text:'Doação de equipamentos de reciclagem chegou!',   yes:{pts:0,    hp:6,   msg:'♻️ Reciclagem aumenta!'},                      no:{pts:100, hp:-2, msg:'💵 Vendeu os equipamentos.'} },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let state = {
+  pts:0, totalPts:0, health:0, cpc:1, cps:0,
+  owned:{}, activeTab:'limpeza',
+  eventActive:false, currentEvent:null,
+  won:false, startTime:Date.now(), clicks:0,
+};
+
+// ── STARS ─────────────────────────────────────────────────────────────
+(function() {
+  const c = document.getElementById('stars-canvas'), ctx = c.getContext('2d');
+  let stars = [];
+  function resize() {
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    stars = Array.from({length:120}, () => ({ x:Math.random()*c.width, y:Math.random()*c.height, r:Math.random()*1.5+0.3, o:Math.random()*0.6+0.1, s:Math.random()*0.003+0.001 }));
+  }
+  function draw(t) {
+    ctx.clearRect(0,0,c.width,c.height);
+    const a = Math.max(0.05, 1 - getPhaseIdx() * 0.18);
+    stars.forEach(s => { s.o = 0.1 + Math.abs(Math.sin(t*s.s))*0.5; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle=`rgba(255,255,220,${s.o*a})`; ctx.fill(); });
+    requestAnimationFrame(draw);
+  }
+  resize(); window.addEventListener('resize', resize); requestAnimationFrame(draw);
+})();
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function fmt(n) { n=Math.floor(n); if(n>=1e9) return (n/1e9).toFixed(2)+'B'; if(n>=1e6) return (n/1e6).toFixed(2)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'k'; return n+''; }
+function getPhaseIdx() { const h=Math.min(100,state.health); for(let i=0;i<PHASES.length;i++) if(h>=PHASES[i].min&&h<PHASES[i].max) return i; return PHASES.length-1; }
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ── VISUALS ───────────────────────────────────────────────────────────
+let lastPi = -1;
+function updateVisuals() {
+  const h  = Math.min(100, Math.max(0, state.health));
+  const pi = getPhaseIdx();
+  const ph = PHASES[pi];
+
+  document.getElementById('health-fill').style.width = h + '%';
+  document.getElementById('health-pct').textContent  = Math.floor(h) + '%';
+  const bclr = ['#6b2020','#5a5a7a','#2a8a7a','#22a855','#1a9adc'];
+  document.getElementById('health-fill').style.background = `linear-gradient(90deg,${bclr[Math.max(0,pi-1)]},${bclr[pi]})`;
+
+  // swap planet SVG
+  document.getElementById('planet-use').setAttribute('href', '#' + ph.svgId);
+
+  const [c1,c2] = ph.skyC.split(',');
+  document.getElementById('sky-bg').style.background = `radial-gradient(ellipse at 50% 70%,${c2},${c1})`;
+  document.getElementById('phase-badge').textContent = 'Fase ' + (pi+1) + ' — ' + ph.label;
+  document.getElementById('planet-ring').style.borderColor = ph.ringColor;
+
+  document.getElementById('pts-display').textContent   = fmt(state.pts);
+  document.getElementById('total-display').textContent = fmt(state.totalPts);
+  document.getElementById('cpc-display').textContent   = fmt(state.cpc);
+  document.getElementById('cps-display').textContent   = fmt(state.cps);
+
+  if(pi !== lastPi) {
+    lastPi = pi;
+    for(let i=0;i<5;i++) document.getElementById('ms-'+i).classList.toggle('reached', i<=pi);
+    refreshTabLocks(pi);
+    if(pi>0) showToast('🌍 Nova fase: ' + ph.label + '!');
+  }
+}
+
+// ── TAB LOCKS ─────────────────────────────────────────────────────────
+function refreshTabLocks(pi) {
+  ['limpeza','natureza','energia','cidade'].forEach(tab => {
+    const btn    = document.getElementById('tab-' + tab);
+    const locked = pi < (TAB_UNLOCK[tab] || 0);
+    btn.classList.toggle('tab-locked', locked);
+    // rebuild lock icon
+    const old = btn.querySelector('.lock-icon');
+    if(old) old.remove();
+    if(locked) { const s=document.createElement('span'); s.className='lock-icon'; s.textContent='🔒'; btn.appendChild(s); }
+    // if active tab just got locked, fall back to limpeza
+    if(locked && state.activeTab === tab) switchTab('limpeza');
+  });
+}
+function tabLocked(tab) { return getPhaseIdx() < (TAB_UNLOCK[tab]||0); }
+
+function switchTab(tab) {
+  if(tabLocked(tab)) return;
+  state.activeTab = tab;
+  document.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  renderShop();
+}
+
+document.querySelectorAll('.shop-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    if(tabLocked(tab)) { showToast('🔒 ' + (TAB_LOCK_MSG[tab] || 'Bloqueado!')); return; }
+    switchTab(tab);
+  });
+});
+
+// ── SHOP ──────────────────────────────────────────────────────────────
+function renderShop() {
+  const list = document.getElementById('shop-items');
+  const msg  = document.getElementById('shop-locked-msg');
+
+  if(tabLocked(state.activeTab)) {
+    list.style.display = 'none'; msg.style.display = 'flex';
+    document.getElementById('lock-title').textContent = 'Categoria Bloqueada';
+    document.getElementById('lock-desc').textContent  = TAB_LOCK_MSG[state.activeTab] || '';
+    return;
+  }
+  list.style.display = 'flex'; msg.style.display = 'none';
+  list.innerHTML = '';
+
+  (UPGRADES[state.activeTab]||[]).forEach(upg => {
+    const owned = !!state.owned[upg.id];
+    const afford = state.pts >= upg.cost;
+    const el = document.createElement('div');
+    el.className = 'upg-item' + (owned ? ' owned' : (!afford ? ' cant-afford' : ''));
+
+    let badges = '';
+    if(upg.cpc) badges += `<span class="badge badge-cpc">+${upg.cpc}/clique</span>`;
+    if(upg.cps) badges += `<span class="badge badge-cps">+${upg.cps}/s</span>`;
+    if(upg.hp)  badges += `<span class="badge badge-hp">+${upg.hp} saúde</span>`;
+
+    el.innerHTML = `
+      <div class="upg-icon-box">${upg.icon}</div>
+      <div class="upg-body">
+        <div class="upg-name">${upg.name}</div>
+        <div class="upg-desc">${upg.desc}</div>
+        <div class="upg-badges">${badges}</div>
+      </div>
+      <div>${owned ? '<span class="badge badge-owned">✓ Comprado</span>' : `<span class="badge badge-cost">${fmt(upg.cost)} ♻️</span>`}</div>
+    `;
+
+    // CRITICAL: only clickable items get the handler; owned/cant-afford have pointer-events:none in CSS
+    if(!owned && afford) {
+      el.addEventListener('click', function handler() {
+        el.removeEventListener('click', handler); // prevent double-fire
+        buyUpgrade(upg.id);
+      });
+    }
+    list.appendChild(el);
+  });
+}
+
+function buyUpgrade(id) {
+  let upg = null;
+  for(const cat of Object.values(UPGRADES)) { upg = cat.find(u=>u.id===id); if(upg) break; }
+  if(!upg || state.owned[id] || state.pts < upg.cost) return;
+  state.pts -= upg.cost; state.owned[id] = true;
+  state.cpc += upg.cpc; state.cps += upg.cps;
+  state.health = Math.min(100, state.health + upg.hp);
+  showToast('✅ ' + upg.name + ' desbloqueado!');
+  renderShop(); updateVisuals(); checkWin();
+}
+
+// ── CLICK ─────────────────────────────────────────────────────────────
+document.getElementById('planet-btn').addEventListener('click', e => {
+  if(state.won) return;
+  state.pts += state.cpc; state.totalPts += state.cpc; state.clicks++;
+  const p = document.createElement('div');
+  p.className = 'particle'; p.textContent = '+' + fmt(state.cpc) + ' ♻️';
+  p.style.left = (e.clientX - 20 + (Math.random()*40-20)) + 'px';
+  p.style.top  = (e.clientY - 10) + 'px';
+  document.body.appendChild(p); setTimeout(() => p.remove(), 1000);
+  updateVisuals(); renderShop(); checkWin();
+});
+
+// ── EVENTS ────────────────────────────────────────────────────────────
+let evTimer = null;
+function scheduleEvent() { clearTimeout(evTimer); evTimer = setTimeout(() => { if(!state.won&&!state.eventActive) triggerEvent(); }, 30000+Math.random()*30000); }
+function triggerEvent() {
+  const ev = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  state.eventActive=true; state.currentEvent=ev;
+  document.getElementById('event-icon').textContent = ev.icon;
+  document.getElementById('event-text').textContent = ev.text;
+  document.getElementById('event-box').style.display = 'block';
+}
+function resolveEvent(c) {
+  if(!state.currentEvent) return;
+  const r = state.currentEvent[c];
+  state.pts    = Math.max(0, state.pts+(r.pts||0));
+  state.health = Math.max(0, Math.min(100, state.health+(r.hp||0)));
+  showToast(r.msg); state.eventActive=false; state.currentEvent=null;
+  document.getElementById('event-box').style.display='none';
+  updateVisuals(); renderShop(); checkWin(); scheduleEvent();
+}
+document.getElementById('ev-yes').addEventListener('click', ()=>resolveEvent('yes'));
+document.getElementById('ev-no').addEventListener('click',  ()=>resolveEvent('no'));
+
+// ── WIN ───────────────────────────────────────────────────────────────
+function checkWin() {
+  if(state.health>=100 && !state.won) {
+    state.won=true;
+    const s=Math.floor((Date.now()-state.startTime)/1000), m=Math.floor(s/60);
+    document.getElementById('win-stats').textContent=`Total: ${fmt(state.totalPts)} ♻️  •  Cliques: ${state.clicks}  •  Tempo: ${m}m ${s%60}s`;
+    document.getElementById('win-overlay').style.display='flex';
+  }
+}
+
+function resetGame() {
+  state={pts:0,totalPts:0,health:0,cpc:1,cps:0,owned:{},activeTab:'limpeza',eventActive:false,currentEvent:null,won:false,startTime:Date.now(),clicks:0};
+  document.getElementById('win-overlay').style.display='none';
+  document.getElementById('event-box').style.display='none';
+  lastPi=-1; refreshTabLocks(0); switchTab('limpeza'); renderShop(); updateVisuals(); scheduleEvent();
+}
+window.resetGame = resetGame;
+
+// ── GAME LOOP ─────────────────────────────────────────────────────────
+let lastTick = performance.now();
+function gameLoop(now) {
+  const dt = Math.min((now-lastTick)/1000, 0.5); lastTick=now;
+  if(!state.won && state.cps>0) {
+    const g = state.cps*dt;
+    state.pts+=g; state.totalPts+=g;
+    state.health=Math.min(100, state.health+state.cps*dt*0.003);
+    updateVisuals(); renderShop(); checkWin();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+setInterval(()=>{
+  if(state.won) return;
+  if(Math.random()<0.12) {
+    const b=0.4+Math.random()*1.2;
+    state.health=Math.min(100,state.health+b);
+    if(Math.random()<0.3) showToast('🌧️ Chuva renovadora! +'+b.toFixed(1)+' saúde');
+    updateVisuals(); checkWin();
+  }
+}, 8000);
+
+// ── INIT ──────────────────────────────────────────────────────────────
+refreshTabLocks(0); renderShop(); updateVisuals(); scheduleEvent(); requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
